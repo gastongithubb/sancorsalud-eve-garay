@@ -18,7 +18,7 @@ const navLinks = [
     label: 'Herramientas', 
     dropdown: [
       { href: '/reclamos', label: 'Reclamos de F4' },
-      { href: '/herramienta2', label: 'Herramienta 2' },
+      { href: '/links-button', label: 'Paginas Frecuentes' },
       { href: '/herramienta3', label: 'Herramienta 3' },
     ]
   },

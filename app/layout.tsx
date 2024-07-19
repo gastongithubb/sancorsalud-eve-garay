@@ -1,6 +1,14 @@
 import './globals.css'
-import Navbar from './components/Navbar/index'
-import Footer from './components/Footer/index'
+import { Suspense, lazy } from 'react'
+import './globals.css'
+
+// Lazy load components
+const Navbar = lazy(() => import('./components/Navbar/index'))
+const Footer = lazy(() => import('./components/Footer/index'))
+
+// Skeleton components
+const NavbarSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
+const FooterSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 
 export const metadata = {
   title: 'Sancor Equipo Garay',
@@ -16,13 +24,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" >
+    <html lang="es">
       <body className="flex flex-col min-h-screen font-sans">
-        <Navbar />
+        <Suspense fallback={<NavbarSkeleton />}>
+          <Navbar />
+        </Suspense>
         <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
           {children}
         </main>
-        <Footer />
+        <Suspense fallback={<FooterSkeleton />}>
+          <Footer />
+        </Suspense>
       </body>
     </html>
   )
