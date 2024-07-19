@@ -1,12 +1,12 @@
-import './globals.css'
-import { Suspense, lazy } from 'react'
+// RootLayout.js
+import { Suspense } from 'react'
 import './globals.css'
 
-// Lazy load components
-const Navbar = lazy(() => import('./components/Navbar/index'))
-const Footer = lazy(() => import('./components/Footer/index'))
+// Import components normally
+import Navbar from './components/Navbar/index'
+import Footer from './components/Footer/index'
 
-// Skeleton components
+// Skeleton components (if still needed)
 const NavbarSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 const FooterSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 
@@ -25,16 +25,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+        />
+      </head>
       <body className="flex flex-col min-h-screen font-sans">
-        <Suspense fallback={<NavbarSkeleton />}>
-          <Navbar />
-        </Suspense>
+        <Navbar />
         <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
           {children}
         </main>
-        <Suspense fallback={<FooterSkeleton />}>
-          <Footer />
-        </Suspense>
+        <Footer />
       </body>
     </html>
   )
