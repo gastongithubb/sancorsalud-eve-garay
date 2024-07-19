@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 
 const ButtonComponent = () => {
@@ -81,7 +82,7 @@ const ButtonComponent = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Panel de Control</h1>
+        <h1 style={styles.title}>Paginas mas frecuentes</h1>
         <div style={styles.buttonGrid}>
           {buttons.map(({ name, color, url }) => (
             <button

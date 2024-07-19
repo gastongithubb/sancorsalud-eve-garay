@@ -23,7 +23,7 @@ const teamData: TeamMember[] = [
         "email": "mail: eve-garay@sancor.konecta.ar",
         "profile": "/team/eve.jpg",
         "link": "/",
-        "cumpleaños": "1980-05-15"
+        "cumpleaños": "20 de Mayo"
     },
     {
         "title": "CX Agent",
@@ -131,7 +131,7 @@ const teamData: TeamMember[] = [
         "description": "Sancor Salud - Konecta  ",
         "contrato": "Contrato: 7 hs",
         "email": "mail: karen.aranda@sancor.konecta.ar",
-        "profile": "/team/none.webp",
+        "profile": "/team/karen-aranda.jpeg",
         "link": "/",
         "cumpleaños": "07 de Julio"
     },
