@@ -1,13 +1,20 @@
-import './globals.css';
-import '@/node_modules/react-modal-video/scss/modal-video.scss';
-import Navbar from './components/Navbar/index';
-import Footer from './components/Footer/index';
+import { Poppins } from 'next/font/google'
+import './globals.css'
+import 'react-modal-video/scss/modal-video.scss'
+import Navbar from './components/Navbar/index'
+import Footer from './components/Footer/index'
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata = {
   title: 'Sancor Equipo Garay',
   description: 'Pagina creada para equipo sancor salud de CX para el equipo de Evelin Garay',
   icons: {
-    icon: '/public/favicon.png',
+    icon: '/favicon.png',
   },
 }
 
@@ -17,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={poppins.className}>
       <body className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
