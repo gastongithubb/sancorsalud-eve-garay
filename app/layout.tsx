@@ -1,14 +1,6 @@
-import { Poppins } from 'next/font/google'
 import './globals.css'
-import 'react-modal-video/scss/modal-video.scss'
 import Navbar from './components/Navbar/index'
 import Footer from './components/Footer/index'
-
-const poppins = Poppins({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-})
 
 export const metadata = {
   title: 'Sancor Equipo Garay',
@@ -24,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={poppins.className}>
-      <body className="flex flex-col min-h-screen">
+    <html lang="es" >
+      <body className="flex flex-col min-h-screen font-sans">
         <Navbar />
         <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
           {children}

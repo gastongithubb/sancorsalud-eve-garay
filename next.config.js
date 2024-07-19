@@ -6,15 +6,11 @@ const nextConfig = {
     config.module.rules.push(
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
-        include: [
-          path.resolve(__dirname, 'node_modules/slick-carousel'),
-          path.resolve(__dirname, 'node_modules/react-modal-video')
-        ]
+        use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
       {
         test: /\.scss$/,
-        use: ['style-loader', 'css-loader', 'sass-loader'],
+        use: ['style-loader', 'css-loader', 'postcss-loader', 'sass-loader'],
         include: path.resolve(__dirname, 'node_modules/react-modal-video')
       }
     );

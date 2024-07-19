@@ -45,8 +45,6 @@ export const breakSchedules = sqliteTable('break_schedules', {
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  password: text('password').notNull(),
   responses: integer('responses').notNull().default(0),
   nps: integer('nps').notNull().default(0),
   csat: integer('csat').notNull().default(0),
@@ -90,8 +88,6 @@ export async function ensureTablesExist() {
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
         responses INTEGER NOT NULL DEFAULT 0,
         nps INTEGER NOT NULL DEFAULT 0,
         csat INTEGER NOT NULL DEFAULT 0,
@@ -252,15 +248,7 @@ export async function createUser(user: Omit<UserRow, 'id'>): Promise<void> {
   }
 }
 
-export async function getUserByEmail(email: string): Promise<UserRow | undefined> {
-  try {
-    await ensureTablesExist();
-    return await db.select().from(users).where(eq(users.email, email)).get();
-  } catch (error: unknown) {
-    console.error('Error al obtener usuario por email:', error);
-    throw new Error(`No se pudo obtener el usuario por email: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+
 
 // News operations
 export async function getNews(page: number = 1, limit: number = 10): Promise<NovedadesRow[]> {
@@ -366,5 +354,3 @@ export async function updateNPSTrimestral(userId: number, month: string, nps: nu
 }
 
 // Alias exports for backwards compatibility
-export const registerUser = createUser;
-export const verifyUser = getUserByEmail;
