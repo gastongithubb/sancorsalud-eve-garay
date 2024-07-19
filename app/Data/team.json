@@ -1,0 +1,277 @@
+{
+    "team": [
+        {
+            "title": "Supervisora",
+            "name": "Evelin Garay",
+            "description": "Sancor Salud - Konecta  ",
+            "contrato": "Contrato: 8 hs",
+            "email": "mail: eve-garay@sancor.konecta.ar",
+            "profile": "/team/eve.jpg",
+            "link": "/",
+            "cumpleaños": "1980-05-15"
+        },
+            {
+                "title": "CX Agent",
+                "name": "Abigail Veyga",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: maria.veyga@sancor.konecta.ar",
+                "profile": "/team/abi.jpg",
+                "link": "/",
+                "cumpleaños": "31 de Agosto"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Agustin Suarez",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: agustin.suarez@sancor.konecta.ar",
+                "profile": "/team/agustin.jpg",
+                "link": "/",
+                "cumpleaños": "08 de Marzo"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Antonella Casas",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: antonella.casas@sancor.konecta.ar",
+                "profile": "/team/none.webp",
+                "link": "/",
+                "cumpleaños": "15 de Julio"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Auca Heil",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: auca.heil@sancor.konecta.ar",
+                "profile": "/team/auca.jpg",
+                "link": "/",
+                "cumpleaños": "27 de Febrero"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Maria Laura Carrizo Tula",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: maria.carrizo@sancor.konecta.ar",
+                "profile": "/team/tula.jpg",
+                "link": "/",
+                "cumpleaños": "26 de Enero"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Danna Cruz",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: danna.cruz@sancor.konecta.ar",
+                "profile": "/team/none.webp",
+                "link": "/",
+                "cumpleaños": "02 de Junio"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Franco Alvarez",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 5 hs",
+                "email": "mail: franco.alvarez@sancor.konecta.ar",
+                "profile": "/team/franco.jpg",
+                "link": "/",
+                "cumpleaños": "05 de Julio"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Gaston Alvarez",
+                "description": "Sancor Salud -  mail: gaston.alvarez@sancor.konecta.ar",
+                "contrato": "Contrato: 5 hs",
+            "email": "mail: eve-garay@sancor.konecta.ar",
+                "profile": "/team/gaston.jpeg",
+                "link": "/",
+                "cumpleaños": "29 de Diciembre"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Javier Rodriguez",
+                "description": "Sancor Salud - Konecta ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: angel.rodriguez@sancor.konecta.ar",
+                "profile": "/team/none.webp",
+                "link": "/",
+                "cumpleaños": "18 de Noviembre"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Jeremías Flores",
+                "description": "Sancor Salud - Konecta ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: jeremias.britos@sancor.konecta.ar",
+                "profile": "/team/jeremias.jpg",
+                "link": "/",
+                "cumpleaños": "10 de Abril"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Karen Aranda",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: karen.aranda@sancor.konecta.ar",
+                "profile": "/team/none.webp",
+                "link": "/",
+                "cumpleaños": "07 de Julio"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Karen Chavez",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 5 hs",
+                "email": "mail: karen.chavez@sancor.konecta.ar",
+                "profile": "/team/karenj.jpg",
+                "link": "/",
+                "cumpleaños": "25 de Octubre"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Lautaro Brocal",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: lautaro.brocal@sancor.konecta.arr",
+                "profile": "/team/lauta.jpg",
+                "link": "/",
+                "cumpleaños": "03 de Septiembre"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Macarena Gomez",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: macarena.gomez@sancor.konecta.ar",
+                "profile": "/team/maca.jpg",
+                "link": "/",
+                "cumpleaños": "15 de Enero"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Marcos Montenegro",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: marcos.montenegro@sancor.konecta.ar",
+                "profile": "/team/marcos.jpg",
+                "link": "/",
+                "cumpleaños": "31 de Diciembre"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Milagros Juncos",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: milagros.juncos@sancor.konecta.ar",
+                "profile": "/team/mili.jpg",
+                "link": "/",
+                "cumpleaños": "23 de Enero"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Nicolas Macagno",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 6 hs",
+                "email": "mail: leonardo.macagno@sancor.konecta.ar",
+                "profile": "/team/lean.jpg",
+                "link": "/",
+                "cumpleaños": "05 de Marzo"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Victoria Martinez",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: victoria.martinez@sancor.konecta.ar",
+                "profile": "/team/vicky.jpg",
+                "link": "/",
+                "cumpleaños": "14 de Mayo"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Ismael Irirarte",
+                "description": "Sancor Salud - Konecta ",
+                "contrato": "Contrato: 5 hs",
+                "email": " mail: ismael.iriarte@sancor.konecta.ar",
+                "profile": "/team/ismael.jpg",
+                "link": "/",
+                "cumpleaños": "15 de Septiembre"
+            },
+            {
+                "title": "CX Agent",
+                "name": "Zaida Abregu",
+                "description": "Sancor Salud - Konecta  ",
+                "contrato": "Contrato: 7 hs",
+                "email": "mail: zaida.abregu@sancor.konecta.ar",
+                "profile": "/team/zaida.jpeg",
+                "link": "/",
+                "cumpleaños": "26 de Abril"
+            }
+        ],
+        "process": [
+        {
+            "label": "SALUDO INICIAL",
+            "content": "Claro, pausado, predispuesto y natural - Ejemplo: 'Hola (nombre Asociada/o) ¿Cómo estás? Mi nombre es xxx, ¿en qué te puedo ayudar?'"
+        },
+        {
+            "label": "DISPOSICION, ACTITUD DE SERVICIO Y CERCANIA",
+            "content": "Mostrar buen ánimo, energía dirigida en hacer/resolver, simpatía, amabilidad, empatía, calidez. PERSONALIZACION."
+        },
+        {
+            "label": "ESCUCHA ACTIVA",
+            "content": "Escuchar sin interrumpir el relato. PARAFRASEAR E INDAGAR para asegurarnos de que hemos comprendido la situación mencionada. Identificar el mensaje explícita o implícitamente."
+        },
+        {
+            "label": "INTELIGENCIA EMOCIONAL",
+            "content": "ACOMPAÑAR en acontecimientos importantes (nacimiento, cirugías, parto/cesárea, fallecimiento). Detectar la emoción y accionar en base a ello. En situaciones conflictivas donde se manifieste malestar (implícito o explícito), CONTENER y DEMOSTRAR INTERÉS en ayudar a resolver la situación, manteniéndose sereno y cordial. Si se debe informar una negativa o respuesta inesperada, EXPLICAR primero con claridad y solidez, usando un vocabulario cálido, amable y empático. Luego, comunicar la resolución (la negativa o respuesta contraria a lo esperado por el cliente). MANTENER FIRMEZA en la respuesta, usando un lenguaje amable, empático, cordial y de contención."
+        },
+        {
+            "label": "DICCION",
+            "content": "Hablar con claridad, naturalidad, calidez y calma. ADAPTARSE siempre al asociado, demostrando interés, evitando superioridad o arrogancia. El RITMO DE VOZ debe acompañar las emociones, sentimientos o intenciones que se deseen transmitir."
+        },
+        {
+            "label": "LENGUAJE Y CLARIDAD EN LAS EXPLICACIONES",
+            "content": "El lenguaje debe ser COMPRENSIBLE Y ADAPTADO al asociado. EVITAR expresiones con connotación negativa y técnica, compleja o de uso interno de la compañía. Realizar las explicaciones con seguridad y asertividad."
+        },
+        {
+            "label": "TIEMPOS DE COMUNICACIÓN",
+            "content": "Evitar poner en espera y priorizar una comunicación fluida. Indicar las acciones que se están realizando para resolver la consulta o reclamo. Si es necesario, informar al asociado sobre la espera y retomar la comunicación agradeciendo la espera."
+        },
+        {
+            "label": "RE-CONTACTO",
+            "content": "SI, por Proceso: cuando el proceso no está diseñado para resolver en el momento, el asociado debe volver a contactarse para continuar su gestión o no está especificado el SLA (tiempo de gestión) en el Proceso. SI, por Persona: si no se diagnostica correctamente, no se brinda la información proporcionada por la herramienta, o se invita explícitamente al cliente a que se comunique nuevamente para conocer el estado de su gestión. SI, por Herramientas: por incidencias técnicas, actualización del sistema o información que no proporcionó Salesforce (Proceso en casos de circuito abierto/Asistente de casos). NO: no se invita al re-contacto cuando la información es clara y correcta (solo afecta el resultado en el caso que sea SI, por Persona)."
+        },
+        {
+            "label": "CIERRE APROPIADO",
+            "content": "Asegurarse de que el asociado comprendió la respuesta o se hizo un resumen. Para casos que requieran intervención con otros sectores, informar el número de Caso y los tiempos de resolución (si el Asistente o proceso lo contempla). Verificar si hay otra consulta, mencionar que estamos cerca y a disposición por cualquier otra consulta. Incentivar la encuesta SI – NO – N/A. SI/NO cumple alguno de los ítems, salvo informar el número de caso en el caso que no aplique. N/A: cuando el corte de la llamada se produce durante el desarrollo de la comunicación sin lograr un cierre apropiado. La decisión de informar la encuesta queda sujeta al criterio del OE interviniente y debe estar definida por la situación y la emoción del cliente. No corresponde en situaciones altamente conflictivas."
+        },
+        {
+            "label": "RESULEVE MOTIVO",
+            "content": "Refiere si el asociado obtuvo las respuestas que buscaba en el momento, ya sea lo que esperaba o no. El motivo implícito que desencadenó el contacto se evaluará en el resto del monitoreo (un error en la web/App, inconvenientes en cartilla, o en el servicio en general se evaluará en los siguientes puntos). SI: el asociado consiguió en el momento del contacto lo que necesitaba saber, se diagnosticó eficazmente y se dio el asesoramiento correcto. NO, por el proceso: se agotaron habilidades, análisis o herramientas disponibles en Salesforce pero el cliente no resolvió su consulta/reclamo ya que la herramienta/proceso (circuito abierto) no está diseñada para resolver en el momento. NO, por las herramientas: las herramientas (cotizador, Fluir) no lo permiten y el asociado no tiene la opción de realizarlo por la web/App (ej.: no funciona Fluir). Dejar especificada esta situación en el registro del caso. NO, por persona: no se lleva la respuesta o se lleva una respuesta inválida, no se diagnosticó correctamente, o no se analizó el caso de manera completa. Solo afecta el resultado en el caso que no resuelva por persona."
+        },
+        {
+            "label": "INFORMA DE MANERA COMPLETA Y CORRECTA",
+            "content": "La respuesta debe abordar todas sus consultas. Evaluar como SI/NO."
+        },
+        {
+            "label": "HISTORIAL DE CASOS",
+            "content": "Una rápida visualización de las últimas consultas y resoluciones puede hacer la diferencia en cuanto a la eficiencia. Se considerará cuando aporte claridad al motivo por el cual el socio se está comunicando (que sea relevante para dar respuesta en el momento actual). Evaluar como SI/NO/N/A (cuando no existen casos anteriores relacionados al motivo del contacto)."
+        },
+        {
+            "label": "ACTUALIZA/VERIFICA DATOS PERSONALES",
+            "content": "SI: cuando se corroboran los datos y se actualiza en Fluir, dejando la fecha en verde (mail, teléfono y dirección). NO: cuando no se actualizan los datos en Fluir y la fecha se visualiza en rojo. N/A: cuando los datos personales están actualizados en una ocasión anterior (fecha en verde). Nota: 'Por favor, ¿me podría indicar su teléfono celular, dirección y correo electrónico, para que en el caso de que esta comunicación se corte podamos retomarla?'"
+        },
+        {
+            "label": "CORRECTO REGISTRO EN SALESFORCE",
+            "content": "Tipo de Registro (primer nivel): SI si mediante la indagación inicial se determina correctamente el motivo por el cual se contacta el cliente. NO si no se determina correctamente. N/A cuando no aplica. Tipo de Caso: SI si se opta por la opción indicada de acuerdo con la consulta del cliente. NO si no se opta por la opción correcta. N/A cuando no aplica. Subtipo de Caso: SI si se realiza correctamente el subtipo del caso manualmente (en caso de reiteración o circuito cerrado). NO si no se realiza correctamente. N/A cuando no aplica (reiteración en un caso ya iniciado). Origen: canal por el cual ingresó la consulta/reclamo del cliente. Evaluar como SI/NO/N/A. Importante: Si el OE debió cargar más de un caso y no lo realizó o lo hizo incorrectamente en al menos uno de ellos, se debe evaluar como NO."
+        },
+        {
+            "label": "EJECUCION DEL CASO Y DIAGNOSTICO EN SALESFORCE",
+            "content": "Se evalúa según la información proporcionada en 'HISTORIAL' dentro de cada caso (validaciones automáticas y manuales), el detalle en 'CHATTER' y 'RELACIONADO' para comprender los movimientos realizados en el registro (cambios de estado automáticos o provocados por el OE, comentarios relevantes). También, verificar la ejecución de tareas indicadas por el Asistente Virtual. En casos abiertos, realizar la correspondiente reiteración según el Site de CRM (https://sites.google.com/sancorsalud.com.ar/crm-salesforce/antes-de-cargar-un-caso?authuser=0). Verificar el registro de comentarios internos con información relevante. En circuitos abiertos, colocar el detalle informado. Evaluar como SI/NO/N/A (N/A cuando no se puede evaluar debido a interrupciones o procesos inadecuados). Nota: Verificar Subtipo final; si el caso tiene un asistente cerrado con clasificaciones automáticas, el caso debe tener subtipo final. Si no se visualiza para tal escenario, se considera NO."
+        }
+    ]
+        
+    }
