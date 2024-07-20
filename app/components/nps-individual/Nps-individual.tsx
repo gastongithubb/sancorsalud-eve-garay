@@ -3,16 +3,49 @@ import React, { useState, useEffect } from 'react';
 import { getPersonnel, addPersonnel, updatePersonnel, PersonnelRow } from '@/utils/database';
 import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
 
-// Componentes de UI personalizados
-const Table = ({ children }) => <table className="w-full text-left">{children}</table>;
-const TableBody = ({ children }) => <tbody>{children}</tbody>;
-const TableCaption = ({ children }) => <caption className="text-lg mb-4">{children}</caption>;
-const TableCell = ({ children }) => <td className="border px-4 py-2">{children}</td>;
-const TableHead = ({ children }) => <th className="border px-4 py-2 bg-gray-100">{children}</th>;
-const TableHeader = ({ children }) => <thead>{children}</thead>;
-const TableRow = ({ children }) => <tr>{children}</tr>;
+// Interfaces for props
+interface TableProps {
+  children: React.ReactNode;
+}
 
-const Button = ({ children, onClick, variant = 'primary', size = 'md' }) => {
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;  // Hacemos onClick opcional
+  variant?: 'primary' | 'ghost' | 'outline';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
+  type?: 'button' | 'submit' | 'reset';
+}
+
+interface InputProps {
+  id: string;
+  name: string;
+  value: string | number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  required?: boolean;
+}
+
+interface DialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+}
+
+interface LabelProps {
+  htmlFor: string;
+  children: React.ReactNode;
+}
+
+// Componentes de UI personalizados
+const Table: React.FC<TableProps> = ({ children }) => <table className="w-full text-left">{children}</table>;
+const TableBody: React.FC<TableProps> = ({ children }) => <tbody>{children}</tbody>;
+const TableCaption: React.FC<TableProps> = ({ children }) => <caption className="text-lg mb-4">{children}</caption>;
+const TableCell: React.FC<TableProps> = ({ children }) => <td className="border px-4 py-2">{children}</td>;
+const TableHead: React.FC<TableProps> = ({ children }) => <th className="border px-4 py-2 bg-gray-100">{children}</th>;
+const TableHeader: React.FC<TableProps> = ({ children }) => <thead>{children}</thead>;
+const TableRow: React.FC<TableProps> = ({ children }) => <tr>{children}</tr>;
+
+const Button: React.FC<ButtonProps> = ({ children, onClick, variant = 'primary', size = 'md', type = 'button' }) => {
   const baseStyle = 'px-4 py-2 rounded';
   const styles = {
     primary: 'bg-blue-500 text-white hover:bg-blue-600',
@@ -22,16 +55,17 @@ const Button = ({ children, onClick, variant = 'primary', size = 'md' }) => {
   const sizes = {
     sm: 'text-sm',
     md: 'text-base',
-    lg: 'text-lg'
+    lg: 'text-lg',
+    icon: 'p-2'
   };
   return (
-    <button onClick={onClick} className={`${baseStyle} ${styles[variant]} ${sizes[size]}`}>
+    <button type={type} onClick={onClick} className={`${baseStyle} ${styles[variant]} ${sizes[size]}`}>
       {children}
     </button>
   );
 };
 
-const Input = ({ id, name, value, onChange, type = 'text', required }) => (
+const Input: React.FC<InputProps> = ({ id, name, value, onChange, type = 'text', required }) => (
   <input
     id={id}
     name={name}
@@ -43,30 +77,54 @@ const Input = ({ id, name, value, onChange, type = 'text', required }) => (
   />
 );
 
-const Dialog = ({ open, onOpenChange, children }) => (
+const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => (
   open ? <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white rounded-lg p-4">{children}</div>
   </div> : null
 );
 
-const DialogContent = ({ children }) => <div>{children}</div>;
-const DialogHeader = ({ children }) => <div className="border-b pb-2 mb-4">{children}</div>;
-const DialogTitle = ({ children }) => <h2 className="text-xl font-bold">{children}</h2>;
-const DialogTrigger = ({ children, onClick }) => (
+const DialogContent: React.FC<TableProps> = ({ children }) => <div>{children}</div>;
+const DialogHeader: React.FC<TableProps> = ({ children }) => <div className="border-b pb-2 mb-4">{children}</div>;
+const DialogTitle: React.FC<TableProps> = ({ children }) => <h2 className="text-xl font-bold">{children}</h2>;
+const DialogTrigger: React.FC<ButtonProps> = ({ children, onClick }) => (
   <div onClick={onClick}>
     {children}
   </div>
 );
 
-const Label = ({ htmlFor, children }) => <label htmlFor={htmlFor} className="block mb-1">{children}</label>;
+const Label: React.FC<LabelProps> = ({ htmlFor, children }) => <label htmlFor={htmlFor} className="block mb-1">{children}</label>;
 
-const EmployeeMetricsCRUD = () => {
+// Actualizamos FormData para que coincida con PersonnelRow
+interface FormData {
+  id?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  dni: string;
+  entryTime: string;
+  exitTime: string;
+  hoursWorked: number;
+  xLite: string;
+  responses: number;
+  nps: number;
+  csat: number;
+  rd: number;
+}
+
+const EmployeeMetricsCRUD: React.FC = () => {
   const [employees, setEmployees] = useState<PersonnelRow[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [editingEmployee, setEditingEmployee] = useState<PersonnelRow | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
+    email: '',
+    dni: '',
+    entryTime: '',
+    exitTime: '',
+    hoursWorked: 0,
+    xLite: '',
+    responses: 0,
     nps: 0,
     csat: 0,
     rd: 0
@@ -85,29 +143,47 @@ const EmployeeMetricsCRUD = () => {
     }
   };
 
-  const showDialog = (employee) => {
+  const showDialog = (employee?: PersonnelRow) => {
     if (employee) {
       setEditingEmployee(employee);
       setFormData(employee);
     } else {
       setEditingEmployee(null);
-      setFormData({ firstName: '', lastName: '', nps: 0, csat: 0, rd: 0 });
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        dni: '',
+        entryTime: '',
+        exitTime: '',
+        hoursWorked: 0,
+        xLite: '',
+        responses: 0,
+        nps: 0,
+        csat: 0,
+        rd: 0
+      });
     }
     setIsDialogOpen(true);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: name === 'firstName' || name === 'lastName' ? value : Number(value) }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: ['firstName', 'lastName', 'email', 'dni', 'entryTime', 'exitTime', 'xLite'].includes(name) 
+        ? value 
+        : Number(value) 
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       if (editingEmployee) {
-        await updatePersonnel({ ...formData, id: editingEmployee.id });
+        await updatePersonnel(formData as PersonnelRow);
       } else {
-        await addPersonnel(formData);
+        await addPersonnel(formData as Omit<PersonnelRow, 'id'>);
       }
       setIsDialogOpen(false);
       fetchEmployees();
@@ -116,7 +192,7 @@ const EmployeeMetricsCRUD = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
         // Implement delete functionality here
@@ -246,4 +322,4 @@ const EmployeeMetricsCRUD = () => {
   );
 };
 
-export default EmployeeMetricsCRUD
+export default EmployeeMetricsCRUD;
