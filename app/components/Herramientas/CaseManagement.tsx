@@ -84,14 +84,15 @@ const CaseManagement: React.FC = () => {
       
       switch(format) {
         case 'autorizaciones':
-          message = `FORMATO PARA RECLAMO DE AUTORIZACIONES
-  CASO: Asociado/a ${caseData.autorizaciones.asociado}
+          message = `✅ FORMATO PARA RECLAMO DE AUTORIZACIONES
+  CASO: ${caseData.autorizaciones.caso}
+  Asociado/a ${caseData.autorizaciones.asociado}
   DNI ${caseData.autorizaciones.dni}
   Consulta/reclama (${caseData.autorizaciones.tipoConsulta})
   ${caseData.autorizaciones.detalleCaso}`;
           break;
         case 'empresas':
-          message = `FORMATO EMPRESAS
+          message = `⚠️ FORMATO EMPRESAS 🌐
   N° de Caso: ${caseData.empresas.numeroCaso}
   Convenio: ${caseData.empresas.convenio}
   Internación: ${caseData.empresas.internacion ? 'Sí' : 'No'}
@@ -100,12 +101,12 @@ const CaseManagement: React.FC = () => {
   Descripción del caso: ${caseData.empresas.descripcionCaso}`;
           break;
         case 'f4':
-          message = `FORMATO F4 POR VALIDACIÓN PRACTICA ON-LINE
-  1. Fecha de turno: ${caseData.f4.fechaTurno}
-  2. DIAGNÓSTICO: ${caseData.f4.diagnostico}
-  3. Médico/n° de matrícula: ${caseData.f4.medico}
-  4. PRÁCTICA SOLICITADA: ${caseData.f4.practicaSolicitada}
-  5. CASO: ${caseData.f4.caso}`;
+          message = `📝 FORMATO F4 POR VALIDACIÓN PRACTICA ON-LINE
+  1️⃣ Fecha de turno: ${caseData.f4.fechaTurno}
+  2️⃣ DIAGNÓSTICO: ${caseData.f4.diagnostico}
+  3️⃣ Médico/n° de matrícula: ${caseData.f4.medico}
+  4️⃣ PRÁCTICA SOLICITADA: ${caseData.f4.practicaSolicitada}
+  5️⃣ CASO: ${caseData.f4.caso}`;
           break;
       }
 
@@ -136,7 +137,7 @@ const CaseManagement: React.FC = () => {
             className="w-full p-2 border rounded"
           >
             <option value="autorizaciones">Reclamo de Autorizaciones</option>
-            <option value="empresas">Formato Empresas</option>
+            <option value="empresas">Reclamo de Autorizaciones Formato Empresas</option>
             <option value="f4">Formato por rechazo de validacion Online</option>
           </select>
         </div>
@@ -189,7 +190,7 @@ const CaseManagement: React.FC = () => {
 
         {format === 'empresas' && (
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold">Formato Empresas</h2>
+            <h2 className="text-xl font-semibold">Reclamo de Autorizaciones Formato Empresas</h2>
             <input
               type="text"
               name="numeroCaso"

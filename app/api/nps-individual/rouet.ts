@@ -1,13 +1,14 @@
-// En /app/api/nps-dashboard/route.ts
-import { NextResponse } from 'next/server';
-import { db, users } from '../../../utils/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { getDB, personnel } from '@/utils/database';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const db = getDB();
+
   try {
-    const allUsers = await db.select().from(users).all();
-    return NextResponse.json(allUsers);
+    const users = await db.select().from(personnel).all();
+    return NextResponse.json(users);
   } catch (error) {
-    console.error('Error fetching all users:', error);
-    return NextResponse.json({ error: 'Error fetching users data' }, { status: 500 });
+    console.error('Error al obtener los usuarios:', error);
+    return NextResponse.json({ error: 'Error al obtener los usuarios' }, { status: 500 });
   }
 }

@@ -1,48 +1,26 @@
 'use client'
-import React, { useState } from 'react';
-import { getEmployees, getBreakSchedules, updateBreakSchedule } from '@/utils/db';
+import React, { useState, useEffect } from 'react';
+import { getPersonnel, getBreakSchedules, updateBreakSchedule, PersonnelRow, BreakScheduleRow } from '@/utils/database';
 import { User, Clock, Briefcase, Search, Coffee, Save, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 
-// Definiciones de tipos
-type Employee = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  dni: string;
-  entryTime: string;
-  exitTime: string;
-  hoursWorked: number;
-  xLite: string;
-  photo?: string;
-};
-
-type Break = {
-  id: number;
-  employeeId: number;
-  day: string;
-  startTime: string;
-  endTime: string;
-  week: number;
-  month: number;
-  year: number;
-};
-
 type EmployeeCardProps = {
-  employee: Employee;
-  onUpdateBreak: (employeeId: number, breakData: Omit<Break, 'id'>) => Promise<void>;
+  employee: PersonnelRow;
+  onUpdateBreak: (breakData: Omit<BreakScheduleRow, 'id'>) => Promise<void>;
 };
 
-// Client component para la interactividad
 function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
   const [showBreaks, setShowBreaks] = useState(false);
-  const [breaks, setBreaks] = useState<Break[]>([]);
+  const [breaks, setBreaks] = useState<BreakScheduleRow[]>([]);
   const [isLoadingBreaks, setIsLoadingBreaks] = useState(false);
-  const [newBreak, setNewBreak] = useState<Omit<Break, 'id' | 'employeeId' | 'week' | 'month' | 'year'>>({ 
-    day: '', 
-    startTime: '', 
-    endTime: '' 
+  const [newBreak, setNewBreak] = useState<Omit<BreakScheduleRow, 'id'>>({
+    personnelId: employee.id,
+    day: '',
+    startTime: '',
+    endTime: '',
+    week: 1,
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear()
   });
 
   const fetchBreaks = async () => {
@@ -67,22 +45,16 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
   };
 
   const handleAddBreak = async () => {
-    const breakData = {
-      ...newBreak,
-      employeeId: employee.id,
-      week: 1, // Asume semana 1, ajusta según sea necesario
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear()
-    };
-    
-    await onUpdateBreak(employee.id, breakData);
-    
-    // Refetch breaks to get the updated list
+    await onUpdateBreak(newBreak);
     fetchBreaks();
-    setNewBreak({ day: '', startTime: '', endTime: '' });
+    setNewBreak({
+      ...newBreak,
+      day: '',
+      startTime: '',
+    });
   };
 
-  const orderDays = (breaks: Break[]) => {
+  const orderDays = (breaks: BreakScheduleRow[]) => {
     const daysOrder = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
     return breaks.sort((a, b) => daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day));
   };
@@ -97,9 +69,7 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
           </div>
           <div className="mt-2 text-sm">{employee.email}</div>
         </div>
-        {employee.photo && (
-          <Image src={employee.photo} alt={`${employee.firstName} ${employee.lastName}`} width={50} height={50} className="rounded-full" />
-        )}
+        {/* Note: Photo is not included in the provided database schema */}
       </div>
       <div className="p-4">
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
@@ -142,7 +112,7 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
               orderDays(breaks).map((breakItem) => (
                 <div key={breakItem.id} className="mb-2 flex items-center space-x-2">
                   <Coffee size={16} />
-                  <span>{`${breakItem.day}: ${breakItem.startTime} - ${breakItem.endTime}`}</span>
+                  <span>{`${breakItem.day}: ${breakItem.startTime}`}</span>
                 </div>
               ))
             )}
@@ -165,12 +135,6 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
                 onChange={(e) => setNewBreak({...newBreak, startTime: e.target.value})}
                 className="border p-2 rounded"
               />
-              <input
-                type="time"
-                value={newBreak.endTime}
-                onChange={(e) => setNewBreak({...newBreak, endTime: e.target.value})}
-                className="border p-2 rounded"
-              />
             </div>
             <button
               onClick={handleAddBreak}
@@ -186,60 +150,73 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
   );
 }
 
-// Server Component
-export default async function EmployeeTable() {
-  const employees = await getEmployees();
+export default function EmployeeTable() {
+  const [employees, setEmployees] = useState<PersonnelRow[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Client Component para manejar la búsqueda y actualización de breaks
-  function EmployeeTableClient({ initialEmployees }: { initialEmployees: Employee[] }) {
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchTerm(event.target.value.toLowerCase());
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const fetchedEmployees = await getPersonnel();
+        setEmployees(fetchedEmployees);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    const filteredEmployees = initialEmployees.filter(employee => 
-      employee.firstName.toLowerCase().includes(searchTerm) ||
-      employee.lastName.toLowerCase().includes(searchTerm) ||
-      employee.email.toLowerCase().includes(searchTerm) ||
-      employee.dni.includes(searchTerm)
-    );
+    fetchEmployees();
+  }, []);
 
-    const handleUpdateBreak = async (employeeId: number, breakData: Omit<Break, 'id'>) => {
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value.toLowerCase());
+  };
+
+  const filteredEmployees = employees.filter(employee => 
+    employee.firstName.toLowerCase().includes(searchTerm) ||
+    employee.lastName.toLowerCase().includes(searchTerm) ||
+    employee.email.toLowerCase().includes(searchTerm) ||
+    employee.dni.includes(searchTerm)
+  );
+
+  const handleUpdateBreak = async (breakData: Omit<BreakScheduleRow, 'id'>) => {
+    try {
       await updateBreakSchedule(breakData);
-    };
+    } catch (error) {
+      console.error('Error updating break schedule:', error);
+    }
+  };
 
-    return (
-      <>
-        <div className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar empleados..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full p-2 pl-10 border rounded-lg"
-            />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEmployees.map((employee) => (
-            <EmployeeCard
-              key={employee.id}
-              employee={employee}
-              onUpdateBreak={handleUpdateBreak}
-            />
-          ))}
-        </div>
-      </>
-    );
+  if (isLoading) {
+    return <div>Loading employees...</div>;
   }
 
   return (
     <div className="container mx-auto py-10 px-4">
       <h2 className="text-3xl font-bold mb-8 text-gray-800">Lista de Empleados</h2>
-      <EmployeeTableClient initialEmployees={employees} />
+      <div className="mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Buscar empleados..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="w-full p-2 pl-10 border rounded-lg"
+          />
+          <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredEmployees.map((employee) => (
+          <EmployeeCard
+            key={employee.id}
+            employee={employee}
+            onUpdateBreak={handleUpdateBreak}
+          />
+        ))}
+      </div>
     </div>
   );
 }

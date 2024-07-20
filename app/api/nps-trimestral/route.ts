@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateUser } from '@/utils/db';
-
-
+import { updateUser, PersonnelRow } from '@/utils/database';
 
 export async function PUT(request: NextRequest) {
   try {
-    const updatedUser = await request.json();
+    const updatedUser: PersonnelRow = await request.json();
     await updateUser(updatedUser);
     return NextResponse.json({ message: 'Usuario actualizado con éxito' });
   } catch (error) {

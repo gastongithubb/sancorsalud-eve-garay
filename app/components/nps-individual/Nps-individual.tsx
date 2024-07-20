@@ -1,170 +1,249 @@
 'use client'
-
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getPersonnel, addPersonnel, updatePersonnel, PersonnelRow } from '@/utils/database';
+import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
 
-interface UserNPSData {
-  id: number;
-  name: string;
-  nps: number;
-  csat: number;
-  rd: number;
-  responses: number;
-}
+// Componentes de UI personalizados
+const Table = ({ children }) => <table className="w-full text-left">{children}</table>;
+const TableBody = ({ children }) => <tbody>{children}</tbody>;
+const TableCaption = ({ children }) => <caption className="text-lg mb-4">{children}</caption>;
+const TableCell = ({ children }) => <td className="border px-4 py-2">{children}</td>;
+const TableHead = ({ children }) => <th className="border px-4 py-2 bg-gray-100">{children}</th>;
+const TableHeader = ({ children }) => <thead>{children}</thead>;
+const TableRow = ({ children }) => <tr>{children}</tr>;
 
-const NPSDashboard: React.FC = () => {
-  const [users, setUsers] = useState<UserNPSData[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserNPSData[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingUser, setEditingUser] = useState<UserNPSData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const Button = ({ children, onClick, variant = 'primary', size = 'md' }) => {
+  const baseStyle = 'px-4 py-2 rounded';
+  const styles = {
+    primary: 'bg-blue-500 text-white hover:bg-blue-600',
+    ghost: 'bg-transparent text-blue-500 hover:bg-blue-50',
+    outline: 'border border-blue-500 text-blue-500 hover:bg-blue-50'
+  };
+  const sizes = {
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg'
+  };
+  return (
+    <button onClick={onClick} className={`${baseStyle} ${styles[variant]} ${sizes[size]}`}>
+      {children}
+    </button>
+  );
+};
+
+const Input = ({ id, name, value, onChange, type = 'text', required }) => (
+  <input
+    id={id}
+    name={name}
+    value={value}
+    onChange={onChange}
+    type={type}
+    required={required}
+    className="border rounded px-2 py-1 w-full"
+  />
+);
+
+const Dialog = ({ open, onOpenChange, children }) => (
+  open ? <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white rounded-lg p-4">{children}</div>
+  </div> : null
+);
+
+const DialogContent = ({ children }) => <div>{children}</div>;
+const DialogHeader = ({ children }) => <div className="border-b pb-2 mb-4">{children}</div>;
+const DialogTitle = ({ children }) => <h2 className="text-xl font-bold">{children}</h2>;
+const DialogTrigger = ({ children, onClick }) => (
+  <div onClick={onClick}>
+    {children}
+  </div>
+);
+
+const Label = ({ htmlFor, children }) => <label htmlFor={htmlFor} className="block mb-1">{children}</label>;
+
+const EmployeeMetricsCRUD = () => {
+  const [employees, setEmployees] = useState<PersonnelRow[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<PersonnelRow | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    nps: 0,
+    csat: 0,
+    rd: 0
+  });
 
   useEffect(() => {
-    fetchUsersData();
+    fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    const filtered = users.filter(user => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredUsers(filtered);
-  }, [searchTerm, users]);
-
-  const fetchUsersData = async () => {
-    setIsLoading(true);
-    setError(null);
+  const fetchEmployees = async () => {
     try {
-      const response = await fetch('/api/nps-individual');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users data');
-      }
-      const data = await response.json();
-      setUsers(data);
-      setFilteredUsers(data);
+      const data = await getPersonnel();
+      setEmployees(data);
     } catch (error) {
-      console.error('Error fetching users data:', error);
-      setError('Error al cargar los datos de los usuarios');
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to fetch employees:', error);
     }
   };
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+  const showDialog = (employee) => {
+    if (employee) {
+      setEditingEmployee(employee);
+      setFormData(employee);
+    } else {
+      setEditingEmployee(null);
+      setFormData({ firstName: '', lastName: '', nps: 0, csat: 0, rd: 0 });
+    }
+    setIsDialogOpen(true);
   };
 
-  const handleEdit = (user: UserNPSData) => {
-    setEditingUser({...user});
-  };
-
-  const handleCancel = () => {
-    setEditingUser(null);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!editingUser) return;
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditingUser({ ...editingUser, [name]: parseInt(value, 10) });
+    setFormData(prev => ({ ...prev, [name]: name === 'firstName' || name === 'lastName' ? value : Number(value) }));
   };
 
-  const handleSave = async () => {
-    if (!editingUser) return;
-    setIsLoading(true);
-    setError(null);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`/api/nps-individual/${editingUser.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editingUser),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update user data');
+      if (editingEmployee) {
+        await updatePersonnel({ ...formData, id: editingEmployee.id });
+      } else {
+        await addPersonnel(formData);
       }
-      setUsers(users.map(user => user.id === editingUser.id ? editingUser : user));
-      setEditingUser(null);
+      setIsDialogOpen(false);
+      fetchEmployees();
     } catch (error) {
-      console.error('Error updating user data:', error);
-      setError('Error al actualizar los datos del usuario');
-    } finally {
-      setIsLoading(false);
+      console.error('Operation failed:', error);
     }
   };
 
-  const renderChart = (userData: UserNPSData) => {
-    const data = [
-      { name: 'NPS', value: userData.nps },
-      { name: 'CSAT', value: userData.csat },
-      { name: 'RD', value: userData.rd },
-      { name: 'Respuestas', value: userData.responses },
-    ];
-
-    return (
-      <div style={{ width: '100%', height: 300 }}>
-        <ResponsiveContainer>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="value" fill="#8884d8" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    );
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this employee?')) {
+      try {
+        // Implement delete functionality here
+        // For now, we'll just remove it from the local state
+        setEmployees(employees.filter(emp => emp.id !== id));
+      } catch (error) {
+        console.error('Failed to delete employee:', error);
+      }
+    }
   };
-
-  if (isLoading) {
-    return <div>Cargando datos...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Métricas - NPS Individual</h1>
-      <input
-        type="text"
-        placeholder="Buscar por nombre..."
-        value={searchTerm}
-        onChange={handleSearch}
-        className="w-full p-2 mb-4 border rounded"
-      />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredUsers.map(user => (
-          <div key={user.id} className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">{user.name}</h2>
-            {renderChart(user)}
-            {editingUser && editingUser.id === user.id ? (
-              <>
-                <input type="number" name="nps" value={editingUser.nps} onChange={handleChange} className="border p-2 rounded mt-2 w-full" placeholder="NPS" />
-                <input type="number" name="csat" value={editingUser.csat} onChange={handleChange} className="border p-2 rounded mt-2 w-full" placeholder="CSAT" />
-                <input type="number" name="rd" value={editingUser.rd} onChange={handleChange} className="border p-2 rounded mt-2 w-full" placeholder="RD" />
-                <input type="number" name="responses" value={editingUser.responses} onChange={handleChange} className="border p-2 rounded mt-2 w-full" placeholder="Respuestas" />
-                <div className="flex justify-between mt-2">
-                  <button onClick={handleSave} className="bg-green-500 text-white p-2 rounded w-1/2 mr-1">Guardar</button>
-                  <button onClick={handleCancel} className="bg-red-500 text-white p-2 rounded w-1/2 ml-1">Cancelar</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p>NPS: {user.nps}</p>
-                <p>CSAT: {user.csat}</p>
-                <p>RD: {user.rd}</p>
-                <p>Respuestas: {user.responses}</p>
-                <button onClick={() => handleEdit(user)} className="bg-blue-500 text-white p-2 rounded mt-2 w-full">Editar</button>
-              </>
-            )}
-          </div>
-        ))}
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Employee Metrics</h1>
+        <Button onClick={() => showDialog()}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
+        </Button>
       </div>
+      
+      <Table>
+        <TableCaption>A list of your employees and their metrics.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>First Name</TableHead>
+            <TableHead>Last Name</TableHead>
+            <TableHead>NPS</TableHead>
+            <TableHead>CSAT</TableHead>
+            <TableHead>RD</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {employees.map(employee => (
+            <TableRow key={employee.id}>
+              <TableCell>{employee.firstName}</TableCell>
+              <TableCell>{employee.lastName}</TableCell>
+              <TableCell>{employee.nps}</TableCell>
+              <TableCell>{employee.csat}</TableCell>
+              <TableCell>{employee.rd}</TableCell>
+              <TableCell>
+                <Button variant="ghost" size="icon" onClick={() => showDialog(employee)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleDelete(employee.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add Employee'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nps">NPS</Label>
+                <Input
+                  id="nps"
+                  name="nps"
+                  type="number"
+                  value={formData.nps}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="csat">CSAT</Label>
+                <Input
+                  id="csat"
+                  name="csat"
+                  type="number"
+                  value={formData.csat}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rd">RD</Label>
+                <Input
+                  id="rd"
+                  name="rd"
+                  type="number"
+                  value={formData.rd}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-export default NPSDashboard;
+export default EmployeeMetricsCRUD

@@ -9,6 +9,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'sf-pro-text': ['var(--font-sf-pro-text)'],
+      },
       colors: {
         slate: {
           50: '#f8fafc',

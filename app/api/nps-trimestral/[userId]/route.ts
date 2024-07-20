@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, npsTrimestral } from '@/utils/db';
-import { eq, desc } from 'drizzle-orm';
+import { getDB, npsTrimestral, eq } from '@/utils/database';
 
 export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
-  const userId = params.userId;
+  const db = getDB();
+  const userId = parseInt(params.userId, 10);
 
   try {
-    const trimestralData = await db.select()
+    const npsData = await db
+      .select()
       .from(npsTrimestral)
-      .where(eq(npsTrimestral.userId, Number(userId)))
-      .orderBy(desc(npsTrimestral.month))
-      .limit(3);
-
-    return NextResponse.json(trimestralData);
+      .where(eq(npsTrimestral.personnelId, userId))
+      .all();
+    return NextResponse.json(npsData);
   } catch (error) {
-    console.error('Error al obtener datos trimestrales de NPS:', error);
-    return NextResponse.json({ message: 'Error al obtener datos trimestrales de NPS' }, { status: 500 });
+    console.error('Error al obtener los datos de NPS trimestral:', error);
+    return NextResponse.json({ error: 'Error al obtener los datos de NPS trimestral' }, { status: 500 });
   }
 }

@@ -12,6 +12,7 @@ const navLinks = [
       { href: '/nps-trimestral', label: 'NPS Trimestral' },
       { href: '/balance-mensual', label: 'Balance Mensual' },
       { href: '/metricas-equipo', label: 'Métricas Equipo' },
+      { href: '/promotores', label: 'Promotores' }
     ]
   },
   { 
@@ -23,7 +24,7 @@ const navLinks = [
     ]
   },
   { href: '/#casos', label: 'Casos derivar / cerrar' },
-  { href: '/promotores', label: 'Promotores' },
+  // { href: '/promotores', label: 'Promotores' },
   { href: '/foro', label: 'Foro' },
 ];
 

@@ -3,9 +3,6 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    optimizeCss: true, // Esto requiere instalar critters
-  },
   webpack: (config, { dev, isServer }) => {
     // Configuración para CSS
     config.module.rules.push({

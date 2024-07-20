@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import ButtonComponent from '../Herramientas/ButtonComponent'
 
 const Banner: React.FC = () => {
   return (
@@ -14,7 +15,7 @@ const Banner: React.FC = () => {
               Evelin Garay <br /> 
               <span className="text-blue-600">Team Work</span>
             </h1>
-            <p className="text-xl font-light leading-relaxed text-[#1e1e1e]">
+            <p className="text-xl font-medium leading-relaxed text-[#1e1e1e]">
               Sancor Salud - Konecta
             </p>
             <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
@@ -40,6 +41,7 @@ const Banner: React.FC = () => {
           </div>
         </div>
       </div>
+      <ButtonComponent />
     </div>
   );
 };

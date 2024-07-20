@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getNews, addNews, deleteNews, updateNewsStatus, updateNews, NovedadesRow } from '@/utils/db';
+import { getNews, addNews, deleteNews, updateNewsStatus, updateNews } from '@/utils/database';
+import type { NovedadesRow } from '@/utils/database';
 
 const NewsManager: React.FC = () => {
   const [news, setNews] = useState<NovedadesRow[]>([]);
