@@ -19,7 +19,7 @@ const navLinks = [
     label: 'Herramientas', 
     dropdown: [
       { href: '/reclamos', label: 'Reclamos de F4' },
-      { href: '/links-button', label: 'Paginas Frecuentes' },
+      { href: '/sla', label: 'SLA' },
       { href: '/herramienta3', label: 'Herramienta 3' },
     ]
   },

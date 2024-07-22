@@ -30,9 +30,26 @@ const nextConfig = {
     if (!dev && !isServer) {
       // Divide el código en chunks más pequeños
       config.optimization.splitChunks.chunks = 'all';
+
+      // Añadir soporte para WebSockets en el cliente
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
     }
 
     return config;
+  },
+  // Configuración para el servidor de desarrollo de Next.js
+  async rewrites() {
+    return [
+      {
+        source: '/api/socket',
+        destination: '/api/socket',
+      },
+    ];
   },
 };
 

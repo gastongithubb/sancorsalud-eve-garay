@@ -1,16 +1,13 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getPersonnel, addPersonnel, updatePersonnel, PersonnelRow } from '@/utils/database';
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Interfaces for props
-interface TableProps {
-  children: React.ReactNode;
-}
-
 interface ButtonProps {
   children: React.ReactNode;
-  onClick?: () => void;  // Hacemos onClick opcional
+  onClick?: () => void;
   variant?: 'primary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   type?: 'button' | 'submit' | 'reset';
@@ -36,15 +33,7 @@ interface LabelProps {
   children: React.ReactNode;
 }
 
-// Componentes de UI personalizados
-const Table: React.FC<TableProps> = ({ children }) => <table className="w-full text-left">{children}</table>;
-const TableBody: React.FC<TableProps> = ({ children }) => <tbody>{children}</tbody>;
-const TableCaption: React.FC<TableProps> = ({ children }) => <caption className="text-lg mb-4">{children}</caption>;
-const TableCell: React.FC<TableProps> = ({ children }) => <td className="border px-4 py-2">{children}</td>;
-const TableHead: React.FC<TableProps> = ({ children }) => <th className="border px-4 py-2 bg-gray-100">{children}</th>;
-const TableHeader: React.FC<TableProps> = ({ children }) => <thead>{children}</thead>;
-const TableRow: React.FC<TableProps> = ({ children }) => <tr>{children}</tr>;
-
+// Custom UI components
 const Button: React.FC<ButtonProps> = ({ children, onClick, variant = 'primary', size = 'md', type = 'button' }) => {
   const baseStyle = 'px-4 py-2 rounded';
   const styles = {
@@ -78,23 +67,22 @@ const Input: React.FC<InputProps> = ({ id, name, value, onChange, type = 'text',
 );
 
 const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => (
-  open ? <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg p-4">{children}</div>
-  </div> : null
+  open ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        {children}
+      </div>
+    </div>
+  ) : null
 );
 
-const DialogContent: React.FC<TableProps> = ({ children }) => <div>{children}</div>;
-const DialogHeader: React.FC<TableProps> = ({ children }) => <div className="border-b pb-2 mb-4">{children}</div>;
-const DialogTitle: React.FC<TableProps> = ({ children }) => <h2 className="text-xl font-bold">{children}</h2>;
-const DialogTrigger: React.FC<ButtonProps> = ({ children, onClick }) => (
-  <div onClick={onClick}>
+const Label: React.FC<LabelProps> = ({ htmlFor, children }) => (
+  <label htmlFor={htmlFor} className="block mb-1 font-medium">
     {children}
-  </div>
+  </label>
 );
 
-const Label: React.FC<LabelProps> = ({ htmlFor, children }) => <label htmlFor={htmlFor} className="block mb-1">{children}</label>;
-
-// Actualizamos FormData para que coincida con PersonnelRow
+// FormData interface
 interface FormData {
   id?: number;
   firstName: string;
@@ -115,6 +103,7 @@ const EmployeeMetricsCRUD: React.FC = () => {
   const [employees, setEmployees] = useState<PersonnelRow[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [editingEmployee, setEditingEmployee] = useState<PersonnelRow | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -204,6 +193,36 @@ const EmployeeMetricsCRUD: React.FC = () => {
     }
   };
 
+  const EmployeeMetricsChart: React.FC<{ employee: PersonnelRow }> = ({ employee }) => {
+    const data = [
+      { name: 'NPS', value: employee.nps },
+      { name: 'CSAT', value: employee.csat },
+      { name: 'RD', value: employee.rd },
+    ];
+
+    return (
+      <div className="bg-white rounded-lg shadow-md p-4 mb-4 h-64">
+        <h3 className="text-lg font-semibold mb-2">{`${employee.firstName} ${employee.lastName}'s Metrics`}</h3>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="value" fill="#8884d8" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(employee => 
+      employee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [employees, searchTerm]);
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
@@ -212,111 +231,124 @@ const EmployeeMetricsCRUD: React.FC = () => {
           <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
         </Button>
       </div>
+
+      <div className="mb-6 relative">
+        <input
+          type="text"
+          placeholder="Search employees..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border rounded-md pr-10"
+        />
+        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      </div>
       
-      <Table>
-        <TableCaption>A list of your employees and their metrics.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>First Name</TableHead>
-            <TableHead>Last Name</TableHead>
-            <TableHead>NPS</TableHead>
-            <TableHead>CSAT</TableHead>
-            <TableHead>RD</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {employees.map(employee => (
-            <TableRow key={employee.id}>
-              <TableCell>{employee.firstName}</TableCell>
-              <TableCell>{employee.lastName}</TableCell>
-              <TableCell>{employee.nps}</TableCell>
-              <TableCell>{employee.csat}</TableCell>
-              <TableCell>{employee.rd}</TableCell>
-              <TableCell>
-                <Button variant="ghost" size="icon" onClick={() => showDialog(employee)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(employee.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
+      {filteredEmployees.length === 0 ? (
+        <p className="text-center text-gray-500 mt-4">No employees found matching your search.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredEmployees.map(employee => (
+            <div key={employee.id} className="mb-4">
+              <EmployeeMetricsChart employee={employee} />
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold">{`${employee.firstName} ${employee.lastName}`}</h3>
+                    <p className="text-sm text-gray-500">{employee.email}</p>
+                  </div>
+                  <div>
+                    <Button variant="ghost" size="icon" onClick={() => showDialog(employee)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(employee.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
-        </TableBody>
-      </Table>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add Employee'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
+        <h2 className="text-xl font-bold mb-4">{editingEmployee ? 'Edit Employee' : 'Add Employee'}</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nps">NPS</Label>
-                <Input
-                  id="nps"
-                  name="nps"
-                  type="number"
-                  value={formData.nps}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="csat">CSAT</Label>
-                <Input
-                  id="csat"
-                  name="csat"
-                  type="number"
-                  value={formData.csat}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rd">RD</Label>
-                <Input
-                  id="rd"
-                  name="rd"
-                  type="number"
-                  value={formData.rd}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
+            <div>
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Save</Button>
+          </div>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="nps">NPS</Label>
+              <Input
+                id="nps"
+                name="nps"
+                type="number"
+                value={formData.nps}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-          </form>
-        </DialogContent>
+            <div>
+              <Label htmlFor="csat">CSAT</Label>
+              <Input
+                id="csat"
+                name="csat"
+                type="number"
+                value={formData.csat}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="rd">RD</Label>
+              <Input
+                id="rd"
+                name="rd"
+                type="number"
+                value={formData.rd}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
       </Dialog>
     </div>
   );
