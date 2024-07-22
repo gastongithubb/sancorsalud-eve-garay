@@ -161,7 +161,7 @@ const teamData: TeamMember[] = [
         "description": "Sancor Salud - Konecta  ",
         "contrato": "Contrato: 6 hs",
         "email": "mail: macarena.gomez@sancor.konecta.ar",
-        "profile": "/team/maca.jpg",
+        "profile": "/team/maca.jpeg",
         "link": "/",
         "cumpleaños": "15 de Enero"
     },

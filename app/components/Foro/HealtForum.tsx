@@ -15,48 +15,52 @@ const HealthForum: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [username, setUsername] = useState('Anónimo');
   const [isConnected, setIsConnected] = useState(false);
-  const [isForumActive, setIsForumActive] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('Conectando...');
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const checkForumAvailability = () => {
-      const now = new Date();
-      const day = now.getDay();
-      const hour = now.getHours();
-      const isWeekday = day >= 1 && day <= 5;
-      const isWorkHours = hour >= 8 && hour < 18;
-      setIsForumActive(isWeekday && isWorkHours);
-    };
-
-    checkForumAvailability();
-    const interval = setInterval(checkForumAvailability, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     const setupSocket = async () => {
-      if (isForumActive) {
-        try {
-          const socket = await getSocket();
-          socketRef.current = socket;
+      try {
+        console.log('Setting up socket...');
+        const socket = await getSocket();
+        socketRef.current = socket;
 
-          socket.on('connect', () => setIsConnected(true));
-          socket.on('disconnect', () => setIsConnected(false));
-          socket.on('chat message', (msg: Message) => {
-            setMessages((prevMessages) => [...prevMessages, msg]);
-          });
+        socket.on('connect', () => {
+          console.log('Connected to server');
+          setIsConnected(true);
+          setConnectionStatus('Conectado');
+          setError(null);
+        });
 
-          setIsConnected(socket.connected);
-        } catch (error) {
-          console.error('Error setting up socket:', error);
-        }
-      } else {
-        if (socketRef.current) {
-          socketRef.current.disconnect();
-        }
-        setIsConnected(false);
+        socket.on('disconnect', (reason) => {
+          console.log('Disconnected from server:', reason);
+          setIsConnected(false);
+          setConnectionStatus(`Desconectado: ${reason}`);
+        });
+
+        socket.on('connect_error', (error: Error) => {
+          console.error('Connection error:', error);
+          setConnectionStatus(`Error de conexión`);
+          setError(`Error de conexión: ${error.message}`);
+        });
+
+        socket.on('reconnect', (attemptNumber: number) => {
+          console.log('Reconnected to server after', attemptNumber, 'attempts');
+          setConnectionStatus('Reconectado');
+          setError(null);
+        });
+
+        socket.on('chat message', (msg: Message) => {
+          setMessages((prevMessages) => [...prevMessages, msg]);
+        });
+
+        setIsConnected(socket.connected);
+      } catch (error) {
+        console.error('Error setting up socket:', error);
+        setConnectionStatus(`Error al configurar el socket`);
+        setError(`Error al configurar el socket: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     };
 
@@ -64,25 +68,22 @@ const HealthForum: React.FC = () => {
 
     return () => {
       if (socketRef.current) {
+        console.log('Cleaning up socket connection...');
         socketRef.current.off('connect');
         socketRef.current.off('disconnect');
         socketRef.current.off('chat message');
         socketRef.current.disconnect();
       }
     };
-  }, [isForumActive]);
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim() && isConnected && isForumActive) {
+    if (newMessage.trim() && isConnected) {
       const message = {
         user: username,
         content: newMessage,
@@ -98,17 +99,6 @@ const HealthForum: React.FC = () => {
       }
     }
   };
-
-  if (!isForumActive) {
-    return (
-      <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-6 text-sky-700">Foro de Salud y Bienestar</h1>
-        <p className="text-gray-700">
-          El foro está cerrado. Vuelve de lunes a viernes entre las 8:00 y las 18:00.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -156,11 +146,13 @@ const HealthForum: React.FC = () => {
         </button>
       </form>
       <p className="mt-2 text-sm text-gray-600">
-        Estado: {isConnected ? 
-          <span className="text-green-500">Conectado</span> : 
-          <span className="text-red-500">Desconectado</span>
-        }
+        Estado: <span className={isConnected ? 'text-green-500' : 'text-red-500'}>{connectionStatus}</span>
       </p>
+      {error && (
+        <p className="mt-2 text-sm text-red-500">
+          Error: {error}
+        </p>
+      )}
     </div>
   );
 };
