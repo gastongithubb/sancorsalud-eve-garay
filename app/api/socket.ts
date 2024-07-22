@@ -24,13 +24,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseWithSocket) => {
 
   console.log('Socket is initializing');
   const io = new SocketIOServer(res.socket.server, {
-    path: '/api/socket',
+    path: '/api/socketio',
     addTrailingSlash: false,
+    transports: ['polling'],
     cors: {
       origin: '*',
       methods: ['GET', 'POST'],
     },
-    transports: ['websocket', 'polling'],
   });
 
   io.on('connection', (socket) => {

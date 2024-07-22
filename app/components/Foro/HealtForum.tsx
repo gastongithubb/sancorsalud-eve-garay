@@ -102,7 +102,7 @@ const HealthForum: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold mb-6 text-teal-600">Foro de Salud y Bienestar</h1>
+      <h1 className="text-3xl font-bold mb-6 text-sky-700">Foro de Salud y Bienestar</h1>
       <div className="mb-4 flex items-center">
         <label className="mr-2 text-gray-700">Usuario:</label>
         <select

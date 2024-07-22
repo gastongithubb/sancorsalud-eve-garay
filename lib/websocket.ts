@@ -12,9 +12,9 @@ export const initializeSocket = async (): Promise<Socket> => {
     console.log('Initializing socket connection...');
     
     socket = io({
-      path: '/api/socket',
+      path: '/api/socketio',
       addTrailingSlash: false,
-      transports: ['websocket', 'polling'],
+      transports: ['polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
