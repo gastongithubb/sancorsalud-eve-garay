@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import './globals.css'
+import { Providers } from './providers'  // Asegúrate de crear este archivo
 
 // Import components normally
 import Navbar from './components/Navbar/index'
@@ -35,15 +36,17 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen font-sans">
-        <Suspense fallback={<NavbarSkeleton />}>
-          <Navbar />
-        </Suspense>
-        <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
-          {children}
-        </main>
-        <Suspense fallback={<FooterSkeleton />}>
-          <Footer />
-        </Suspense>
+        <Providers>
+          <Suspense fallback={<NavbarSkeleton />}>
+            <Navbar />
+          </Suspense>
+          <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
+            {children}
+          </main>
+          <Suspense fallback={<FooterSkeleton />}>
+            <Footer />
+          </Suspense>
+        </Providers>
       </body>
     </html>
   )

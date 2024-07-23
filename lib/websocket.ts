@@ -12,7 +12,7 @@ export const initializeSocket = async (): Promise<Socket> => {
     console.log('Initializing socket connection...');
     
     socket = io({
-      path: '/api/socketio',
+      path: '/api/socket',
       addTrailingSlash: false,
       transports: ['polling'],
       reconnection: true,

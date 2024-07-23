@@ -1,10 +1,9 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { sql } from 'drizzle-orm';
+import { sql, SQL } from 'drizzle-orm';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { eq, and, desc } from 'drizzle-orm';
 import { config } from './config';
-
 
 // Definición de tipos
 type Client = ReturnType<typeof createClient>;
@@ -48,8 +47,6 @@ try {
   initializeDatabase();
 } catch (error) {
   console.error('Error crítico al inicializar la base de datos:', error);
-  // Aquí podrías implementar alguna lógica de manejo de errores,
-  // como mostrar un mensaje al usuario o intentar reiniciar la aplicación
 }
 
 // Función para obtener el cliente de la base de datos
@@ -111,11 +108,22 @@ export const npsTrimestral = sqliteTable('nps_trimestral', {
   nps: integer('nps').notNull(),
 });
 
+export const uploadedFiles = sqliteTable('uploaded_files', {
+  id: integer('id').primaryKey(),
+  fileName: text('file_name').notNull(),
+  fileType: text('file_type').notNull(),
+  filePath: text('file_path').notNull(),
+  uploadDate: text('upload_date').notNull(),
+  processedData: text('processed_data'),
+  personnelId: integer('personnel_id').references(() => personnel.id),
+});
+
 // Type definitions
 export type PersonnelRow = typeof personnel.$inferSelect;
 export type BreakScheduleRow = typeof breakSchedules.$inferSelect;
 export type NovedadesRow = typeof news.$inferSelect;
 export type NPSTrimestralRow = typeof npsTrimestral.$inferSelect;
+export type UploadedFileRow = typeof uploadedFiles.$inferSelect;
 
 // Database initialization
 export async function ensureTablesExist() {
@@ -178,6 +186,20 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('Tabla nps_trimestral verificada/creada');
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS uploaded_files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        file_name TEXT NOT NULL,
+        file_type TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        upload_date TEXT NOT NULL,
+        processed_data TEXT,
+        personnel_id INTEGER,
+        FOREIGN KEY (personnel_id) REFERENCES personnel(id)
+      )
+    `);
+    console.log('Tabla uploaded_files verificada/creada');
 
     console.log('Inicialización de la base de datos completada con éxito');
   } catch (error) {
@@ -388,68 +410,116 @@ export async function updateNPSTrimestral(personnelId: number, month: string, np
         set: { nps }
       })
       .run();
-      console.log(`NPS trimestral actualizado para el personal ${personnelId} en el mes ${month}`);
-    } catch (error: unknown) {
-      console.error('Error al actualizar NPS trimestral:', error);
-      throw new Error(`No se pudo actualizar el NPS trimestral: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    console.log(`NPS trimestral actualizado para el personal ${personnelId} en el mes ${month}`);
+  } catch (error: unknown) {
+    console.error('Error al actualizar NPS trimestral:', error);
+    throw new Error(`No se pudo actualizar el NPS trimestral: ${error instanceof Error ? error.message : String(error)}`);
   }
-  
-  // Función de utilidad para ejecutar migraciones
-  export async function runMigrations() {
-    const client = getClient();
+}
+
+// Operaciones para archivos subidos
+export async function addUploadedFile(file: Omit<UploadedFileRow, 'id'>): Promise<number> {
+  const db = getDB();
+  try {
+    const result = await db.insert(uploadedFiles).values(file).run();
+    console.log('Archivo subido agregado con éxito');
+    const insertedId = result.lastInsertRowid;
+    if (insertedId === undefined) {
+      throw new Error('No se pudo obtener el ID del archivo insertado');
+    }
+    return Number(insertedId);
+  } catch (error: unknown) {
+    console.error('Error al agregar archivo subido:', error);
+    throw new Error(`No se pudo agregar el archivo subido: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function getUploadedFiles(personnelId?: number): Promise<UploadedFileRow[]> {
+  const db = getDB();
+  try {
+    let query;
+    if (personnelId !== undefined) {
+      query = sql`SELECT * FROM uploaded_files WHERE personnel_id = ${personnelId}`;
+    } else {
+      query = sql`SELECT * FROM uploaded_files`;
+    }
+    
+    const result = await db.execute(query);
+    return result as UploadedFileRow[];
+  } catch (error: unknown) {
+    console.error('Error al obtener archivos subidos:', error);
+    throw new Error(`No se pudieron obtener los archivos subidos: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function updateProcessedData(fileId: number, processedData: string): Promise<void> {
+  const db = getDB();
+  try {
+    await db.update(uploadedFiles)
+      .set({ processedData })
+      .where(eq(uploadedFiles.id, fileId))
+      .run();
+    console.log(`Datos procesados actualizados para el archivo ${fileId}`);
+  } catch (error: unknown) {
+    console.error('Error al actualizar datos procesados:', error);
+    throw new Error(`No se pudieron actualizar los datos procesados: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función de utilidad para ejecutar migraciones
+export async function runMigrations() {
+  const client = getClient();
+  try {
+    console.log('Iniciando migraciones...');
+    // Aquí puedes añadir tus migraciones específicas
+    // Por ejemplo:
+    // await client.execute(`ALTER TABLE personnel ADD COLUMN new_column TEXT`);
+    console.log('Migraciones completadas con éxito');
+  } catch (error) {
+    console.error('Error al ejecutar migraciones:', error);
+    throw error;
+  }
+}
+
+// Función para cerrar la conexión de la base de datos
+export async function closeDatabase() {
+  if (client) {
     try {
-      console.log('Iniciando migraciones...');
-      // Aquí puedes añadir tus migraciones específicas
-      // Por ejemplo:
-      // await client.execute(`ALTER TABLE personnel ADD COLUMN new_column TEXT`);
-      console.log('Migraciones completadas con éxito');
+      await client.close();
+      console.log('Conexión a la base de datos cerrada con éxito');
     } catch (error) {
-      console.error('Error al ejecutar migraciones:', error);
-      throw error;
+      console.error('Error al cerrar la conexión de la base de datos:', error);
     }
   }
-  
-  // Función para cerrar la conexión de la base de datos
-  export async function closeDatabase() {
+}
+
+// Función para reiniciar la conexión de la base de datos
+export async function resetDatabaseConnection() {
+  try {
     if (client) {
-      try {
-        await client.close();
-        console.log('Conexión a la base de datos cerrada con éxito');
-      } catch (error) {
-        console.error('Error al cerrar la conexión de la base de datos:', error);
-      }
+      await closeDatabase();
     }
+    initializeDatabase();
+    console.log('Conexión a la base de datos reiniciada con éxito');
+  } catch (error) {
+    console.error('Error al reiniciar la conexión de la base de datos:', error);
+    throw error;
   }
-  
-  // Función para reiniciar la conexión de la base de datos
-  export async function resetDatabaseConnection() {
-    try {
-      if (client) {
-        await closeDatabase();
-      }
-      initializeDatabase();
-      console.log('Conexión a la base de datos reiniciada con éxito');
-    } catch (error) {
-      console.error('Error al reiniciar la conexión de la base de datos:', error);
-      throw error;
-    }
+}
+
+export async function updateUser(user: PersonnelRow): Promise<void> {
+  const db = getDB();
+  try {
+    await db
+      .update(personnel)
+      .set(user)
+      .where(eq(personnel.id, user.id))
+      .run();
+    console.log(`Usuario ${user.id} actualizado con éxito`);
+  } catch (error: unknown) {
+    console.error('Error al actualizar el usuario:', error);
+    throw new Error(`No se pudo actualizar el usuario: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
 
-
-  export async function updateUser(user: PersonnelRow): Promise<void> {
-    const db = getDB();
-    try {
-      await db
-        .update(personnel)
-        .set(user)
-        .where(eq(personnel.id, user.id))
-        .run();
-      console.log(`Usuario ${user.id} actualizado con éxito`);
-    } catch (error: unknown) {
-      console.error('Error al actualizar el usuario:', error);
-      throw new Error(`No se pudo actualizar el usuario: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  export { eq };
+export { eq };
