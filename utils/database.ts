@@ -434,23 +434,23 @@ export async function addUploadedFile(file: Omit<UploadedFileRow, 'id'>): Promis
   }
 }
 
-export async function getUploadedFiles(personnelId?: number): Promise<UploadedFileRow[]> {
-  const db = getDB();
-  try {
-    let query;
-    if (personnelId !== undefined) {
-      query = sql`SELECT * FROM uploaded_files WHERE personnel_id = ${personnelId}`;
-    } else {
-      query = sql`SELECT * FROM uploaded_files`;
-    }
+// export async function getUploadedFiles(personnelId?: number): Promise<UploadedFileRow[]> {
+//   const db = getDB();
+//   try {
+//     let query;
+//     if (personnelId !== undefined) {
+//       query = sql`SELECT * FROM uploaded_files WHERE personnel_id = ${personnelId}`;
+//     } else {
+//       query = sql`SELECT * FROM uploaded_files`;
+//     }
     
-    const result = await db.execute(query);
-    return result as UploadedFileRow[];
-  } catch (error: unknown) {
-    console.error('Error al obtener archivos subidos:', error);
-    throw new Error(`No se pudieron obtener los archivos subidos: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+//     const result = await db.execute(query);
+//     return result as UploadedFileRow[];
+//   } catch (error: unknown) {
+//     console.error('Error al obtener archivos subidos:', error);
+//     throw new Error(`No se pudieron obtener los archivos subidos: ${error instanceof Error ? error.message : String(error)}`);
+//   }
+// }
 
 export async function updateProcessedData(fileId: number, processedData: string): Promise<void> {
   const db = getDB();

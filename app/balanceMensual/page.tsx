@@ -1,9 +1,9 @@
-import BalanceMensual from '../components/BalanceMensual/FileUpload';
+// import BalanceMensual from '../components/BalanceMensual/FileUpload';
 
-export default function TeamPage() {
-  return (
-    <div>
-      <BalanceMensual />
-    </div>
-  );
-}
+// export default function TeamPage() {
+//   return (
+//     <div>
+//       <BalanceMensual />
+//     </div>
+//   );
+// }
