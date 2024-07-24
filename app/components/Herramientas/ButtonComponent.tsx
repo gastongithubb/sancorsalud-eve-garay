@@ -20,7 +20,7 @@ const ButtonComponent = () => {
     },
     { 
       name: "AMB prestadores", 
-      color: "#F59E0B",
+      color: "#DAD100",
       url: "http://prestadoresui.ams.red/#/prestador"
     },
     { 
@@ -37,6 +37,11 @@ const ButtonComponent = () => {
       name: "Manual Farmaceutico", 
       color: "#00B9D7",
       url: "https://docs.google.com/spreadsheets/d/1GeHNHLQjdRnzl2uI6eMVy0J5a5dxqBxFQiDAvVrCIZA/edit?gid=1361535532#gid=1361535532"
+    },
+    { 
+      name: "Planes Sancor Looker", 
+      color: "#ff8400",
+      url: "https://lookerstudio.google.com/u/0/reporting/ba41a3f7-31e2-4d5b-9fec-77070e93da06/page/p_8pn1i7sx5c"
     }
   ];
 
