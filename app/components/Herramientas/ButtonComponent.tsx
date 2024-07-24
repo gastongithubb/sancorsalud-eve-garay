@@ -32,6 +32,11 @@ const ButtonComponent = () => {
       name: "Beneficio de cada plan", 
       color: "#6366F1",
       url: "https://docs.google.com/spreadsheets/d/1EBYTBtBba9NM8OtZoD2Ye0OSIH_-QUqe/edit?pli=1&gid=1972551366#gid=1972551366"
+    },
+    { 
+      name: "Manueal Farmaceutico", 
+      color: "#00B9D7",
+      url: "https://docs.google.com/spreadsheets/d/1GeHNHLQjdRnzl2uI6eMVy0J5a5dxqBxFQiDAvVrCIZA/edit?gid=1361535532#gid=1361535532"
     }
   ];
 

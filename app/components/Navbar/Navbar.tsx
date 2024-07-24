@@ -20,11 +20,38 @@ const navLinks = [
     dropdown: [
       { href: '/reclamos', label: 'Reclamos de F4' },
       { href: '/sla', label: 'SLA' },
-      { href: '/herramienta3', label: 'Herramienta 3' },
+      { href: 'https://docs.google.com/spreadsheets/d/10dZhGPjLzw4XxZQ3uZdNmQtUo64clE9jNnWBkkUKezQ/edit#gid=0', label: 'Protesis en Ambulatorio', target: '_blank' },
+      { href: 'https://drive.google.com/file/d/1WrBLlnFoTYoWQhGw8ez83VCpn3d5h4-o/view?usp=sharing', label: 'Carga de CUD (Proceso)', target: '_blank'},
+      { href: '/NomencladorNU', label: 'Practicas por codigo NU y NB' },
+      { href: '/NomencladorNM', label: 'Practicas por codigo NM' }
+    ]
+  },
+  {
+    label: 'Vademecum',
+    dropdown: [
+      { 
+        href: 'https://docs.google.com/spreadsheets/d/1720VTYilXZxEHKnWYpq5R7x2hkswnGfd/edit?rtpof=true&sd=true&gid=2119192922#gid=2119192922', 
+        label: 'PMI Sustentable, C y OS',
+        target: '_blank'
+      },
+      { 
+        href: 'https://docs.google.com/spreadsheets/d/1GDfmi_CBvcmeJZKWyKFtx6eGZqppraUOyFSqe0SBExE/edit?gid=1182941618#gid=1182941618', 
+        label: 'Salud Reproductiva',
+        target: '_blank'
+      },
+      { 
+        href: 'https://docs.google.com/spreadsheets/d/13R6tt3O36BfMeSDuSwfwzwi9dYP4FHhDEtj8rIBZ_Gw/edit?gid=2095242313#gid=2095242313', 
+        label: 'Cronicos',
+        target: '_blank'
+      },
+      { 
+        href: 'https://docs.google.com/spreadsheets/d/1aj5NU2iU4NeIiLdhIcBAKUY4xMfhNrqm/edit?gid=1202509401#gid=1202509401', 
+        label: 'Sustentable',
+        target: '_blank'
+      },
     ]
   },
   { href: '/#casos', label: 'Casos derivar / cerrar' },
-  // { href: '/promotores', label: 'Promotores' },
   { href: '/foro', label: 'Foro' },
 ];
 
@@ -72,9 +99,25 @@ const Navbar: React.FC = () => {
                     </button>
                     <div className="absolute left-0 invisible w-48 mt-2 transition-all duration-200 transform translate-y-1 bg-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
                       {link.dropdown.map((item, itemIndex) => (
-                        <Link key={itemIndex} href={item.href} className="block px-4 py-2 text-sm text-gray-950 hover:bg-blue-50 hover:text-cyan-900">
-                          {item.label}
-                        </Link>
+                        item.target === '_blank' ? (
+                          <a 
+                            key={itemIndex} 
+                            href={item.href} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block px-4 py-2 text-sm text-gray-950 hover:bg-blue-50 hover:text-cyan-900"
+                          >
+                            {item.label}
+                          </a>
+                        ) : (
+                          <Link 
+                            key={itemIndex} 
+                            href={item.href} 
+                            className="block px-4 py-2 text-sm text-gray-950 hover:bg-blue-50 hover:text-cyan-900"
+                          >
+                            {item.label}
+                          </Link>
+                        )
                       ))}
                     </div>
                   </>
@@ -121,9 +164,25 @@ const Navbar: React.FC = () => {
                     {dropdownOpen === link.label && (
                       <div className="pl-4">
                         {link.dropdown.map((item, itemIndex) => (
-                          <Link key={itemIndex} href={item.href} className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
-                            {item.label}
-                          </Link>
+                          item.target === '_blank' ? (
+                            <a 
+                              key={itemIndex} 
+                              href={item.href} 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
+                            >
+                              {item.label}
+                            </a>
+                          ) : (
+                            <Link 
+                              key={itemIndex} 
+                              href={item.href} 
+                              className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
+                            >
+                              {item.label}
+                            </Link>
+                          )
                         ))}
                       </div>
                     )}
