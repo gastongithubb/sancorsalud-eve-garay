@@ -1,5 +1,5 @@
 import React from 'react';
-import HealthForum from '@/app/components/Foro/HealtForum';
+import HealthForum from '@/app/components/Foro/OnlineWhiteBoard';
 
 const ForoPage: React.FC = () => {
   return (

@@ -52,7 +52,7 @@ const navLinks = [
     ]
   },
   { href: '/#casos', label: 'Casos derivar / cerrar' },
-  { href: '/foro', label: 'Foro' },
+  { href: '/foro', label: 'Pizarra' },
 ];
 
 const Navbar: React.FC = () => {
