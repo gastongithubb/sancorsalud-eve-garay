@@ -1,6 +1,6 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { sql, SQL } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { eq, and, desc } from 'drizzle-orm';
 import { config } from './config';
@@ -79,7 +79,8 @@ export const personnel = sqliteTable('personnel', {
   responses: integer('responses').notNull().default(0),
   nps: integer('nps').notNull().default(0),
   csat: integer('csat').notNull().default(0),
-  rd: integer('rd').notNull().default(0)
+  rd: integer('rd').notNull().default(0),
+  month: text('month').notNull() // Nuevo campo para el mes
 });
 
 export const breakSchedules = sqliteTable('break_schedules', {
@@ -101,29 +102,23 @@ export const news = sqliteTable('news', {
   estado: text('estado').notNull().default('activa'),
 });
 
-export const npsTrimestral = sqliteTable('nps_trimestral', {
-  id: integer('id').primaryKey(),
-  personnelId: integer('personnel_id').notNull(),
-  month: text('month').notNull(),
-  nps: integer('nps').notNull(),
-});
 
-export const uploadedFiles = sqliteTable('uploaded_files', {
+
+export const syncLogs = sqliteTable('sync_logs', {
   id: integer('id').primaryKey(),
-  fileName: text('file_name').notNull(),
-  fileType: text('file_type').notNull(),
-  filePath: text('file_path').notNull(),
-  uploadDate: text('upload_date').notNull(),
-  processedData: text('processed_data'),
-  personnelId: integer('personnel_id').references(() => personnel.id),
+  syncDate: text('sync_date').notNull(),
+  sheetName: text('sheet_name').notNull(),
+  lastSyncedRow: integer('last_synced_row').notNull(),
+  status: text('status').notNull(),
 });
 
 // Type definitions
-export type PersonnelRow = typeof personnel.$inferSelect;
 export type BreakScheduleRow = typeof breakSchedules.$inferSelect;
 export type NovedadesRow = typeof news.$inferSelect;
-export type NPSTrimestralRow = typeof npsTrimestral.$inferSelect;
-export type UploadedFileRow = typeof uploadedFiles.$inferSelect;
+export type SyncLogRow = typeof syncLogs.$inferSelect;
+export type PersonnelRow = typeof personnel.$inferSelect;
+export type MonthlyData = PersonnelRow & { month: string };
+
 
 // Database initialization
 export async function ensureTablesExist() {
@@ -145,7 +140,8 @@ export async function ensureTablesExist() {
         responses INTEGER NOT NULL DEFAULT 0,
         nps INTEGER NOT NULL DEFAULT 0,
         csat INTEGER NOT NULL DEFAULT 0,
-        rd INTEGER NOT NULL DEFAULT 0
+        rd INTEGER NOT NULL DEFAULT 0,
+        month TEXT NOT NULL
       )
     `);
     console.log('Tabla personnel verificada/creada');
@@ -176,30 +172,17 @@ export async function ensureTablesExist() {
     `);
     console.log('Tabla news verificada/creada');
 
+    
     await client.execute(`
-      CREATE TABLE IF NOT EXISTS nps_trimestral (
+      CREATE TABLE IF NOT EXISTS sync_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        personnel_id INTEGER NOT NULL,
-        month TEXT NOT NULL,
-        nps INTEGER NOT NULL,
-        FOREIGN KEY (personnel_id) REFERENCES personnel(id)
+        sync_date TEXT NOT NULL,
+        sheet_name TEXT NOT NULL,
+        last_synced_row INTEGER NOT NULL,
+        status TEXT NOT NULL
       )
     `);
-    console.log('Tabla nps_trimestral verificada/creada');
-
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS uploaded_files (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        file_name TEXT NOT NULL,
-        file_type TEXT NOT NULL,
-        file_path TEXT NOT NULL,
-        upload_date TEXT NOT NULL,
-        processed_data TEXT,
-        personnel_id INTEGER,
-        FOREIGN KEY (personnel_id) REFERENCES personnel(id)
-      )
-    `);
-    console.log('Tabla uploaded_files verificada/creada');
+    console.log('Tabla sync_logs verificada/creada');
 
     console.log('Inicialización de la base de datos completada con éxito');
   } catch (error) {
@@ -209,11 +192,19 @@ export async function ensureTablesExist() {
 }
 
 // Personnel operations
-export async function getPersonnel(): Promise<PersonnelRow[]> {
+export async function getPersonnel(month?: string): Promise<MonthlyData[]> {
   const db = getDB();
   try {
     await ensureTablesExist();
-    return await db.select().from(personnel).all();
+    let query = db.select().from(personnel);
+    if (month) {
+      query = query.where(eq(personnel.month, month));
+    }
+    const results = await query.all();
+    return results.map(row => ({
+      ...row,
+      month: row.month || '' // Asegurarse de que 'month' esté presente
+    }));
   } catch (error: unknown) {
     console.error('Error al obtener personal:', error);
     throw new Error(`No se pudo obtener el personal: ${error instanceof Error ? error.message : String(error)}`);
@@ -382,89 +373,7 @@ export async function updateNews(newsItem: NovedadesRow): Promise<void> {
   }
 }
 
-// NPS Trimestral operations
-export async function getNPSTrimestral(personnelId: number): Promise<NPSTrimestralRow[]> {
-  const db = getDB();
-  try {
-    await ensureTablesExist();
-    return await db.select()
-      .from(npsTrimestral)
-      .where(eq(npsTrimestral.personnelId, personnelId))
-      .orderBy(desc(npsTrimestral.month))
-      .limit(3)
-      .all();
-  } catch (error: unknown) {
-    console.error('Error al obtener NPS trimestral:', error);
-    throw new Error(`No se pudo obtener el NPS trimestral: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
 
-export async function updateNPSTrimestral(personnelId: number, month: string, nps: number): Promise<void> {
-  const db = getDB();
-  try {
-    const result = await db
-      .insert(npsTrimestral)
-      .values({ personnelId, month, nps })
-      .onConflictDoUpdate({
-        target: [npsTrimestral.personnelId, npsTrimestral.month],
-        set: { nps }
-      })
-      .run();
-    console.log(`NPS trimestral actualizado para el personal ${personnelId} en el mes ${month}`);
-  } catch (error: unknown) {
-    console.error('Error al actualizar NPS trimestral:', error);
-    throw new Error(`No se pudo actualizar el NPS trimestral: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-// Operaciones para archivos subidos
-export async function addUploadedFile(file: Omit<UploadedFileRow, 'id'>): Promise<number> {
-  const db = getDB();
-  try {
-    const result = await db.insert(uploadedFiles).values(file).run();
-    console.log('Archivo subido agregado con éxito');
-    const insertedId = result.lastInsertRowid;
-    if (insertedId === undefined) {
-      throw new Error('No se pudo obtener el ID del archivo insertado');
-    }
-    return Number(insertedId);
-  } catch (error: unknown) {
-    console.error('Error al agregar archivo subido:', error);
-    throw new Error(`No se pudo agregar el archivo subido: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-// export async function getUploadedFiles(personnelId?: number): Promise<UploadedFileRow[]> {
-//   const db = getDB();
-//   try {
-//     let query;
-//     if (personnelId !== undefined) {
-//       query = sql`SELECT * FROM uploaded_files WHERE personnel_id = ${personnelId}`;
-//     } else {
-//       query = sql`SELECT * FROM uploaded_files`;
-//     }
-    
-//     const result = await db.execute(query);
-//     return result as UploadedFileRow[];
-//   } catch (error: unknown) {
-//     console.error('Error al obtener archivos subidos:', error);
-//     throw new Error(`No se pudieron obtener los archivos subidos: ${error instanceof Error ? error.message : String(error)}`);
-//   }
-// }
-
-export async function updateProcessedData(fileId: number, processedData: string): Promise<void> {
-  const db = getDB();
-  try {
-    await db.update(uploadedFiles)
-      .set({ processedData })
-      .where(eq(uploadedFiles.id, fileId))
-      .run();
-    console.log(`Datos procesados actualizados para el archivo ${fileId}`);
-  } catch (error: unknown) {
-    console.error('Error al actualizar datos procesados:', error);
-    throw new Error(`No se pudieron actualizar los datos procesados: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
 
 // Función de utilidad para ejecutar migraciones
 export async function runMigrations() {
@@ -519,6 +428,65 @@ export async function updateUser(user: PersonnelRow): Promise<void> {
   } catch (error: unknown) {
     console.error('Error al actualizar el usuario:', error);
     throw new Error(`No se pudo actualizar el usuario: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Nuevas funciones para manejar la sincronización
+export async function logSync(sheetName: string, lastSyncedRow: number, status: string): Promise<void> {
+  const db = getDB();
+  try {
+    await db.insert(syncLogs).values({
+      syncDate: new Date().toISOString(),
+      sheetName,
+      lastSyncedRow,
+      status
+    }).run();
+  } catch (error) {
+    console.error('Error al registrar la sincronización:', error);
+    throw error;
+  }
+}
+
+export async function getLastSyncedRow(sheetName: string): Promise<number> {
+  const db = getDB();
+  try {
+    const result = await db.select({ lastSyncedRow: syncLogs.lastSyncedRow })
+      .from(syncLogs)
+      .where(eq(syncLogs.sheetName, sheetName))
+      .orderBy(desc(syncLogs.syncDate))
+      .limit(1)
+      .all();
+    
+    return result.length > 0 ? result[0].lastSyncedRow : 0;
+  } catch (error) {
+    console.error('Error al obtener la última fila sincronizada:', error);
+    throw error;
+  }
+}
+
+export async function syncSheetsToTurso(sheetName: string, data: any[]): Promise<void> {
+  const db = getDB();
+  try {
+    const lastSyncedRow = await getLastSyncedRow(sheetName);
+    const newData = data.slice(lastSyncedRow);
+
+    for (const row of newData) {
+      // Aquí debes implementar la lógica para insertar o actualizar los datos en la tabla correspondiente
+      // Por ejemplo, si es la hoja de personal:
+      if (sheetName === 'personnel') {
+        await db.insert(personnel).values(row).onConflictDoUpdate({
+          target: [personnel.dni],
+          set: row
+        }).run();
+      }
+      // Añade más condiciones para otras hojas según sea necesario
+    }
+
+    await logSync(sheetName, data.length, 'success');
+  } catch (error) {
+    console.error('Error al sincronizar datos de Google Sheets a Turso:', error);
+    await logSync(sheetName, await getLastSyncedRow(sheetName), 'error');
+    throw error;
   }
 }
 

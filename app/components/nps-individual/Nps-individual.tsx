@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import { getPersonnel, addPersonnel, updatePersonnel, PersonnelRow } from '@/utils/database';
 import { PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
@@ -31,6 +31,29 @@ interface DialogProps {
 interface LabelProps {
   htmlFor: string;
   children: React.ReactNode;
+}
+
+// Updated interfaces for employee data
+interface MonthlyMetrics {
+  month: string;
+  nps: number;
+  surveys: number;
+  csat: number;
+  rd: number;
+  dni: string;
+  entryTime: string;
+  exitTime: string;
+  hoursWorked: number;
+  xLite: string;
+  responses: number;
+}
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  monthlyMetrics: MonthlyMetrics[];
 }
 
 // Custom UI components
@@ -82,41 +105,27 @@ const Label: React.FC<LabelProps> = ({ htmlFor, children }) => (
   </label>
 );
 
-// FormData interface
-interface FormData {
-  id?: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  dni: string;
-  entryTime: string;
-  exitTime: string;
-  hoursWorked: number;
-  xLite: string;
-  responses: number;
-  nps: number;
-  csat: number;
-  rd: number;
-}
-
 const EmployeeMetricsCRUD: React.FC = () => {
-  const [employees, setEmployees] = useState<PersonnelRow[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [editingEmployee, setEditingEmployee] = useState<PersonnelRow | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [formData, setFormData] = useState<FormData>({
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toLocaleString('default', { month: 'long' }));
+  const [formData, setFormData] = useState<MonthlyMetrics & { firstName: string; lastName: string; email: string }>({
     firstName: '',
     lastName: '',
     email: '',
+    month: selectedMonth,
+    nps: 0,
+    surveys: 0,
+    csat: 0,
+    rd: 0,
     dni: '',
     entryTime: '',
     exitTime: '',
     hoursWorked: 0,
     xLite: '',
-    responses: 0,
-    nps: 0,
-    csat: 0,
-    rd: 0
+    responses: 0
   });
 
   useEffect(() => {
@@ -126,31 +135,49 @@ const EmployeeMetricsCRUD: React.FC = () => {
   const fetchEmployees = async () => {
     try {
       const data = await getPersonnel();
-      setEmployees(data);
+      setEmployees(data.map((item: any) => ({
+        ...item,
+        monthlyMetrics: item.monthlyMetrics || []
+      })));
     } catch (error) {
       console.error('Failed to fetch employees:', error);
     }
   };
 
-  const showDialog = (employee?: PersonnelRow) => {
+  const showDialog = (employee?: Employee) => {
     if (employee) {
+      const currentMonthMetrics = employee.monthlyMetrics.find(m => m.month === selectedMonth) || {
+        month: selectedMonth,
+        nps: 0,
+        surveys: 0,
+        csat: 0,
+        rd: 0,
+        dni: '',
+        entryTime: '',
+        exitTime: '',
+        hoursWorked: 0,
+        xLite: '',
+        responses: 0
+      };
       setEditingEmployee(employee);
-      setFormData(employee);
+      setFormData({ ...employee, ...currentMonthMetrics });
     } else {
       setEditingEmployee(null);
       setFormData({
         firstName: '',
         lastName: '',
         email: '',
+        month: selectedMonth,
+        nps: 0,
+        surveys: 0,
+        csat: 0,
+        rd: 0,
         dni: '',
         entryTime: '',
         exitTime: '',
         hoursWorked: 0,
         xLite: '',
-        responses: 0,
-        nps: 0,
-        csat: 0,
-        rd: 0
+        responses: 0
       });
     }
     setIsDialogOpen(true);
@@ -160,7 +187,7 @@ const EmployeeMetricsCRUD: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ 
       ...prev, 
-      [name]: ['firstName', 'lastName', 'email', 'dni', 'entryTime', 'exitTime', 'xLite'].includes(name) 
+      [name]: ['firstName', 'lastName', 'email', 'month', 'dni', 'entryTime', 'exitTime', 'xLite'].includes(name) 
         ? value 
         : Number(value) 
     }));
@@ -170,9 +197,52 @@ const EmployeeMetricsCRUD: React.FC = () => {
     e.preventDefault();
     try {
       if (editingEmployee) {
-        await updatePersonnel(formData as PersonnelRow);
+        const updatedEmployee: Employee = {
+          ...editingEmployee,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          monthlyMetrics: editingEmployee.monthlyMetrics.map(m => 
+            m.month === selectedMonth ? { ...formData, month: selectedMonth } : m
+          )
+        };
+        if (!updatedEmployee.monthlyMetrics.some(m => m.month === selectedMonth)) {
+          updatedEmployee.monthlyMetrics.push({
+            month: selectedMonth,
+            nps: formData.nps,
+            surveys: formData.surveys,
+            csat: formData.csat,
+            rd: formData.rd,
+            dni: formData.dni,
+            entryTime: formData.entryTime,
+            exitTime: formData.exitTime,
+            hoursWorked: formData.hoursWorked,
+            xLite: formData.xLite,
+            responses: formData.responses
+          });
+        }
+        await updatePersonnel(updatedEmployee);
       } else {
-        await addPersonnel(formData as Omit<PersonnelRow, 'id'>);
+        const newEmployee: Employee = {
+          id: Date.now(), // temporary ID, should be replaced by database
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          monthlyMetrics: [{
+            month: selectedMonth,
+            nps: formData.nps,
+            surveys: formData.surveys,
+            csat: formData.csat,
+            rd: formData.rd,
+            dni: formData.dni,
+            entryTime: formData.entryTime,
+            exitTime: formData.exitTime,
+            hoursWorked: formData.hoursWorked,
+            xLite: formData.xLite,
+            responses: formData.responses
+          }]
+        };
+        await addPersonnel(newEmployee);
       }
       setIsDialogOpen(false);
       fetchEmployees();
@@ -193,160 +263,151 @@ const EmployeeMetricsCRUD: React.FC = () => {
     }
   };
 
-  const EmployeeMetricsChart: React.FC<{ employee: PersonnelRow }> = ({ employee }) => {
+  const EmployeeMetricsChart: React.FC<{ employee: Employee }> = ({ employee }) => {
+    const currentMonthMetrics = employee.monthlyMetrics.find(m => m.month === selectedMonth) || {
+      month: selectedMonth,
+      nps: 0,
+      surveys: 0,
+      csat: 0,
+      rd: 0
+    };
+
     const data = [
-      { name: 'NPS', value: employee.nps },
-      { name: 'CSAT', value: employee.csat },
-      { name: 'RD', value: employee.rd },
+      { name: 'NPS', value: currentMonthMetrics.nps },
+      { name: 'Surveys', value: currentMonthMetrics.surveys },
+      { name: 'CSAT', value: currentMonthMetrics.csat },
+      { name: 'RD', value: currentMonthMetrics.rd }
     ];
 
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 mb-4 h-64">
-        <h3 className="text-lg font-semibold mb-2">{`${employee.firstName} ${employee.lastName}'s Metrics`}</h3>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#8884d8" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={data}>
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="value" fill="#8884d8" />
+        </BarChart>
+      </ResponsiveContainer>
     );
   };
 
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(employee => 
+  const filteredEmployees = useMemo(
+    () => employees.filter(employee =>
       employee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [employees, searchTerm]);
+    ),
+    [employees, searchTerm]
+  );
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Employee Metrics</h1>
-        <Button onClick={() => showDialog()}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
-        </Button>
-      </div>
-
-      <div className="mb-6 relative">
+    <div className="p-4">
+      <h1 className="text-2xl mb-4">Employee Metrics CRUD</h1>
+      <div className="mb-4 flex justify-between">
+        <Button onClick={() => showDialog()}>Add Employee</Button>
         <input
           type="text"
-          placeholder="Search employees..."
+          placeholder="Search..."
+          className="border px-2 py-1 rounded"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border rounded-md pr-10"
+          onChange={e => setSearchTerm(e.target.value)}
         />
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
       </div>
-      
-      {filteredEmployees.length === 0 ? (
-        <p className="text-center text-gray-500 mt-4">No employees found matching your search.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredEmployees.map(employee => (
-            <div key={employee.id} className="mb-4">
-              <EmployeeMetricsChart employee={employee} />
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-semibold">{`${employee.firstName} ${employee.lastName}`}</h3>
-                    <p className="text-sm text-gray-500">{employee.email}</p>
-                  </div>
-                  <div>
-                    <Button variant="ghost" size="icon" onClick={() => showDialog(employee)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(employee.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border rounded">
+          <thead>
+            <tr>
+              <th className="py-2 px-4 border-b">First Name</th>
+              <th className="py-2 px-4 border-b">Last Name</th>
+              <th className="py-2 px-4 border-b">Email</th>
+              <th className="py-2 px-4 border-b">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.map(employee => (
+              <tr key={employee.id}>
+                <td className="py-2 px-4 border-b">{employee.firstName}</td>
+                <td className="py-2 px-4 border-b">{employee.lastName}</td>
+                <td className="py-2 px-4 border-b">{employee.email}</td>
+                <td className="py-2 px-4 border-b">
+                  <Button onClick={() => showDialog(employee)} variant="outline" size="icon">
+                    <Pencil />
+                  </Button>
+                  <Button onClick={() => handleDelete(employee.id)} variant="outline" size="icon">
+                    <Trash2 />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <h2 className="text-xl font-bold mb-4">{editingEmployee ? 'Edit Employee' : 'Add Employee'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <h2 className="text-xl mb-4">{editingEmployee ? 'Edit Employee' : 'Add Employee'}</h2>
+          <div className="mb-4">
+            <Label htmlFor="firstName">First Name</Label>
+            <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
           </div>
-          <div>
+          <div className="mb-4">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
+          </div>
+          <div className="mb-4">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
+            <Input id="email" name="email" value={formData.email} onChange={handleInputChange} required />
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="nps">NPS</Label>
-              <Input
-                id="nps"
-                name="nps"
-                type="number"
-                value={formData.nps}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="csat">CSAT</Label>
-              <Input
-                id="csat"
-                name="csat"
-                type="number"
-                value={formData.csat}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="rd">RD</Label>
-              <Input
-                id="rd"
-                name="rd"
-                type="number"
-                value={formData.rd}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+          <div className="mb-4">
+            <Label htmlFor="month">Month</Label>
+            <Input id="month" name="month" value={formData.month} onChange={handleInputChange} required />
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+          <div className="mb-4">
+            <Label htmlFor="nps">NPS</Label>
+            <Input id="nps" name="nps" value={formData.nps} onChange={handleInputChange} type="number" required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="surveys">Surveys</Label>
+            <Input id="surveys" name="surveys" value={formData.surveys} onChange={handleInputChange} type="number" required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="csat">CSAT</Label>
+            <Input id="csat" name="csat" value={formData.csat} onChange={handleInputChange} type="number" required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="rd">RD</Label>
+            <Input id="rd" name="rd" value={formData.rd} onChange={handleInputChange} type="number" required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="dni">DNI</Label>
+            <Input id="dni" name="dni" value={formData.dni} onChange={handleInputChange} required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="entryTime">Entry Time</Label>
+            <Input id="entryTime" name="entryTime" value={formData.entryTime} onChange={handleInputChange} required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="exitTime">Exit Time</Label>
+            <Input id="exitTime" name="exitTime" value={formData.exitTime} onChange={handleInputChange} required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="hoursWorked">Hours Worked</Label>
+            <Input id="hoursWorked" name="hoursWorked" value={formData.hoursWorked} onChange={handleInputChange} type="number" required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="xLite">X Lite</Label>
+            <Input id="xLite" name="xLite" value={formData.xLite} onChange={handleInputChange} required />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="responses">Responses</Label>
+            <Input id="responses" name="responses" value={formData.responses} onChange={handleInputChange} type="number" required />
+          </div>
+          <div className="flex justify-end">
+            <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">
+              {editingEmployee ? 'Update' : 'Add'} Employee
+            </Button>
           </div>
         </form>
       </Dialog>
