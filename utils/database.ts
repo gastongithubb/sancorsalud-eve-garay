@@ -140,6 +140,7 @@ export type UploadedFileSelect = typeof uploadedFiles.$inferSelect;
 export type UploadedFileInsert = typeof uploadedFiles.$inferInsert;
 export type SyncLogSelect = typeof syncLogs.$inferSelect;
 export type SyncLogInsert = typeof syncLogs.$inferInsert;
+export type NovedadesRow = NewsSelect;
 
 // Database initialization
 export async function ensureTablesExist() {
