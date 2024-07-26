@@ -141,6 +141,13 @@ export type UploadedFileInsert = typeof uploadedFiles.$inferInsert;
 export type SyncLogSelect = typeof syncLogs.$inferSelect;
 export type SyncLogInsert = typeof syncLogs.$inferInsert;
 export type NovedadesRow = NewsSelect;
+export type MonthlyData = {
+  month: string;
+  nps: number;
+  csat: number;
+  rd: number;
+};
+
 
 // Database initialization
 export async function ensureTablesExist() {
