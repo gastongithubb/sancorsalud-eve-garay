@@ -1,19 +1,19 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { getPersonnel, getBreakSchedules, updateBreakSchedule, PersonnelRow, BreakScheduleRow } from '@/utils/database';
+import { getPersonnel, getBreakSchedules, updateBreakSchedule, PersonnelSelect, BreakScheduleSelect } from '@/utils/database';
 import { User, Clock, Briefcase, Search, Coffee, Save, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 
 type EmployeeCardProps = {
-  employee: PersonnelRow;
-  onUpdateBreak: (breakData: Omit<BreakScheduleRow, 'id'>) => Promise<void>;
+  employee: PersonnelSelect;
+  onUpdateBreak: (breakData: Omit<BreakScheduleSelect, 'id'>) => Promise<void>;
 };
 
 function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
   const [showBreaks, setShowBreaks] = useState(false);
-  const [breaks, setBreaks] = useState<BreakScheduleRow[]>([]);
+  const [breaks, setBreaks] = useState<BreakScheduleSelect[]>([]);
   const [isLoadingBreaks, setIsLoadingBreaks] = useState(false);
-  const [newBreak, setNewBreak] = useState<Omit<BreakScheduleRow, 'id'>>({
+  const [newBreak, setNewBreak] = useState<Omit<BreakScheduleSelect, 'id'>>({
     personnelId: employee.id,
     day: '',
     startTime: '',
@@ -54,7 +54,7 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
     });
   };
 
-  const orderDays = (breaks: BreakScheduleRow[]) => {
+  const orderDays = (breaks: BreakScheduleSelect[]) => {
     const daysOrder = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
     return breaks.sort((a, b) => daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day));
   };
@@ -151,7 +151,7 @@ function EmployeeCard({ employee, onUpdateBreak }: EmployeeCardProps) {
 }
 
 export default function EmployeeTable() {
-  const [employees, setEmployees] = useState<PersonnelRow[]>([]);
+  const [employees, setEmployees] = useState<PersonnelSelect[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -181,7 +181,7 @@ export default function EmployeeTable() {
     employee.dni.includes(searchTerm)
   );
 
-  const handleUpdateBreak = async (breakData: Omit<BreakScheduleRow, 'id'>) => {
+  const handleUpdateBreak = async (breakData: Omit<BreakScheduleSelect, 'id'>) => {
     try {
       await updateBreakSchedule(breakData);
     } catch (error) {
