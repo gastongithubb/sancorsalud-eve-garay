@@ -244,6 +244,32 @@ export async function ensureTablesExist() {
   }
 }
 
+// Función para obtener datos mensuales (si no existe, la añadimos)
+export async function getMonthlyData(): Promise<MonthlyData[]> {
+  const db = getDB();
+  try {
+    const result = await db.select({
+      month: personnel.month,
+      nps: sql<number>`AVG(${personnel.nps})`.as('nps'),
+      csat: sql<number>`AVG(${personnel.csat})`.as('csat'),
+      rd: sql<number>`AVG(${personnel.rd})`.as('rd'),
+    })
+    .from(personnel)
+    .groupBy(personnel.month)
+    .execute();
+
+    return result.map(row => ({
+      month: row.month,
+      nps: parseFloat(row.nps?.toFixed(2) ?? '0'),
+      csat: parseFloat(row.csat?.toFixed(2) ?? '0'),
+      rd: parseFloat(row.rd?.toFixed(2) ?? '0'),
+    }));
+  } catch (error) {
+    console.error('Error fetching monthly data:', error);
+    throw new Error(`Failed to fetch monthly data: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 // Personnel operations
 export async function getPersonnel(month?: string): Promise<PersonnelSelect[]> {
   const db = getDB();
