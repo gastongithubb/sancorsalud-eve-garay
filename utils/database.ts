@@ -102,6 +102,23 @@ export const news = sqliteTable('news', {
   estado: text('estado').notNull().default('activa'),
 });
 
+export const npsTrimestral = sqliteTable('nps_trimestral', {
+  id: integer('id').primaryKey(),
+  personnelId: integer('personnel_id').notNull(),
+  month: text('month').notNull(),
+  nps: integer('nps').notNull(),
+});
+
+export const uploadedFiles = sqliteTable('uploaded_files', {
+  id: integer('id').primaryKey(),
+  fileName: text('file_name').notNull(),
+  fileType: text('file_type').notNull(),
+  filePath: text('file_path').notNull(),
+  uploadDate: text('upload_date').notNull(),
+  processedData: text('processed_data'),
+  personnelId: integer('personnel_id').references(() => personnel.id),
+});
+
 export const syncLogs = sqliteTable('sync_logs', {
   id: integer('id').primaryKey(),
   syncDate: text('sync_date').notNull(),
@@ -117,6 +134,10 @@ export type BreakScheduleSelect = typeof breakSchedules.$inferSelect;
 export type BreakScheduleInsert = typeof breakSchedules.$inferInsert;
 export type NewsSelect = typeof news.$inferSelect;
 export type NewsInsert = typeof news.$inferInsert;
+export type NPSTrimestralSelect = typeof npsTrimestral.$inferSelect;
+export type NPSTrimestralInsert = typeof npsTrimestral.$inferInsert;
+export type UploadedFileSelect = typeof uploadedFiles.$inferSelect;
+export type UploadedFileInsert = typeof uploadedFiles.$inferInsert;
 export type SyncLogSelect = typeof syncLogs.$inferSelect;
 export type SyncLogInsert = typeof syncLogs.$inferInsert;
 
@@ -171,6 +192,31 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('News table verified/created');
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS nps_trimestral (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        personnel_id INTEGER NOT NULL,
+        month TEXT NOT NULL,
+        nps INTEGER NOT NULL,
+        FOREIGN KEY (personnel_id) REFERENCES personnel(id)
+      )
+    `);
+    console.log('NPS Trimestral table verified/created');
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS uploaded_files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        file_name TEXT NOT NULL,
+        file_type TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        upload_date TEXT NOT NULL,
+        processed_data TEXT,
+        personnel_id INTEGER,
+        FOREIGN KEY (personnel_id) REFERENCES personnel(id)
+      )
+    `);
+    console.log('Uploaded files table verified/created');
 
     await client.execute(`
       CREATE TABLE IF NOT EXISTS sync_logs (
@@ -366,6 +412,62 @@ export async function updateNews(newsItem: NewsSelect): Promise<void> {
   } catch (error: unknown) {
     console.error('Error updating news:', error);
     throw new Error(`Failed to update news: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// NPS Trimestral operations
+// ... (código anterior)
+
+// NPS Trimestral operations
+export async function getNPSTrimestral(personnelId: number): Promise<NPSTrimestralSelect[]> {
+  const db = getDB();
+  try {
+    await ensureTablesExist();
+    return await db.select()
+      .from(npsTrimestral)
+      .where(eq(npsTrimestral.personnelId, personnelId))
+      .orderBy(desc(npsTrimestral.month))
+      .limit(3)
+      .all();
+  } catch (error: unknown) {
+    console.error('Error fetching NPS trimestral:', error);
+    throw new Error(`Failed to fetch NPS trimestral: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function updateNPSTrimestral(personnelId: number, month: string, nps: number): Promise<void> {
+  const db = getDB();
+  try {
+    const result = await db
+      .insert(npsTrimestral)
+      .values({ personnelId, month, nps })
+      .onConflictDoUpdate({
+        target: [npsTrimestral.personnelId, npsTrimestral.month],
+        set: { nps }
+      })
+      .run();
+    console.log(`NPS trimestral updated for personnel ${personnelId} in month ${month}`);
+  } catch (error: unknown) {
+    console.error('Error updating NPS trimestral:', error);
+    throw new Error(`Failed to update NPS trimestral: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Uploaded Files operations
+// Uploaded Files operations
+
+
+export async function updateProcessedData(fileId: number, processedData: string): Promise<void> {
+  const db = getDB();
+  try {
+    await db.update(uploadedFiles)
+      .set({ processedData })
+      .where(eq(uploadedFiles.id, fileId))
+      .run();
+    console.log(`Processed data updated for file ${fileId}`);
+  } catch (error: unknown) {
+    console.error('Error updating processed data:', error);
+    throw new Error(`Failed to update processed data: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
