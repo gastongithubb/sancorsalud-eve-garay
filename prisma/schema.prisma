@@ -7,11 +7,9 @@ datasource db {
   url      = env("NEXT_PUBLIC_TURSO_DATABASE_URL")
 }
 
-model auth_users {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
+model AuthUser {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
   password String
   name     String?
 }
-
-// Agrega aquí otros modelos si los tienes

@@ -1,35 +1,46 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from './prisma'
 import bcryptjs from 'bcryptjs';
 import { SignJWT, jwtVerify } from "jose";
 
-const prisma = new PrismaClient()
-
-const secretKey = process.env.JWT_SECRET_KEY!;
+const secretKey = process.env.JWT_SECRET_KEY;
+if (!secretKey) {
+  throw new Error('JWT_SECRET_KEY is not set');
+}
 const key = new TextEncoder().encode(secretKey);
 
-// Actualizamos la interfaz para permitir que userId sea string o number
 export interface JWTPayload {
-  userId: string | number;
+  userId: string;
   exp?: number;
-  [key: string]: any;  // para permitir propiedades adicionales
+  [key: string]: any;
 }
 
 export async function login({ email, password }: { email: string; password: string }) {
-  const user = await prisma.auth_users.findUnique({
-    where: { email },
-  });
+  try {
+    const user = await prisma.authUser.findUnique({
+      where: { email },
+    });
 
-  if (!user || !(await bcryptjs.compare(password, user.password))) {
-    throw new Error("Credenciales inválidas");
+    if (!user) {
+      console.error('Usuario no encontrado:', email);
+      throw new Error("Credenciales inválidas");
+    }
+
+    const isValidPassword = await bcryptjs.compare(password, user.password);
+    if (!isValidPassword) {
+      console.error('Contraseña inválida para el usuario:', email);
+      throw new Error("Credenciales inválidas");
+    }
+
+    const token = await encrypt({ userId: user.id.toString() });
+
+    return { user, token };
+  } catch (error) {
+    console.error('Error durante el login:', error);
+    throw new Error('Ocurrió un error durante el login. Por favor, intenta de nuevo más tarde.');
   }
-
-  // Convertimos el id a string para asegurarnos de que siempre sea un string en el token
-  const token = await encrypt({ userId: user.id.toString() });
-
-  return { user, token };
 }
 
-export async function encrypt(payload: JWTPayload) {
+export async function encrypt(payload: JWTPayload): Promise<string> {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
