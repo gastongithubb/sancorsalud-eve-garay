@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("NEXT_PUBLIC_TURSO_DATABASE_URL")
+}
+
+model auth_users {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  name     String?
+}
+
+// Agrega aquí otros modelos si los tienes

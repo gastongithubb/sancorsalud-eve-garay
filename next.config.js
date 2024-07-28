@@ -4,45 +4,54 @@ const path = require('path');
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { dev, isServer }) => {
-    // Configuración para CSS
+    // Configuraciones existentes...
     config.module.rules.push({
       test: /\.css$/,
-      use: [
-        'style-loader',
-        'css-loader',
-        'postcss-loader',
-      ],
+      use: ['style-loader', 'css-loader', 'postcss-loader'],
     });
 
-    // Configuración específica para SCSS de react-modal-video
     config.module.rules.push({
       test: /\.scss$/,
-      use: [
-        'style-loader',
-        'css-loader',
-        'postcss-loader',
-        'sass-loader',
-      ],
+      use: ['style-loader', 'css-loader', 'postcss-loader', 'sass-loader'],
       include: path.resolve(__dirname, 'node_modules/react-modal-video'),
     });
 
-    // Optimizaciones adicionales solo para producción y cliente
-    if (!dev && !isServer) {
-      // Divide el código en chunks más pequeños
-      config.optimization.splitChunks.chunks = 'all';
+    config.module.rules.push({
+      test: /\.html$/,
+      loader: 'ignore-loader',
+      include: /node_modules/,
+    });
 
-      // Añadir soporte para WebSockets en el cliente
+    // Manejar módulos problemáticos
+    if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
+        'mock-aws-s3': false,
+        'aws-sdk': false,
+        'nock': false,
       };
+    }
+
+    // Ignorar módulos específicos que no son necesarios en el lado del cliente
+    config.externals = [
+      ...(config.externals || []),
+      {
+        'mock-aws-s3': 'mock-aws-s3',
+        'aws-sdk': 'aws-sdk',
+        'nock': 'nock',
+        '@mapbox/node-pre-gyp': '@mapbox/node-pre-gyp'
+      }
+    ];
+
+    if (!dev && !isServer) {
+      config.optimization.splitChunks.chunks = 'all';
     }
 
     return config;
   },
-  // Configuración para el servidor de desarrollo de Next.js
   async rewrites() {
     return [
       {
@@ -53,7 +62,7 @@ const nextConfig = {
   },
 };
 
-// Envuelve nextConfig con withBundleAnalyzer solo si el paquete está instalado
+// Código existente para withBundleAnalyzer...
 if (process.env.ANALYZE === 'true') {
   try {
     const withBundleAnalyzer = require('@next/bundle-analyzer')();

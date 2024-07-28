@@ -82,7 +82,7 @@ const Input: React.FC<InputProps> = ({ id, name, value, onChange, type = 'text',
 const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => (
   open ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {children}
       </div>
     </div>
@@ -296,7 +296,7 @@ const EmployeeMetricsCRUD: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <form onSubmit={handleSubmit}>
           <h2 className="text-xl mb-4">{editingEmployee ? 'Edit Employee' : 'Add Employee'}</h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="firstName">First Name</Label>
               <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
@@ -329,6 +329,9 @@ const EmployeeMetricsCRUD: React.FC = () => {
               <Label htmlFor="xLite">X Lite</Label>
               <Input id="xLite" name="xLite" value={formData.xLite} onChange={handleInputChange} required />
             </div>
+          </div>
+          <h3 className="text-lg font-semibold mt-6 mb-2">Metrics</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="responses">Responses</Label>
               <Input id="responses" name="responses" value={formData.responses} onChange={handleInputChange} type="number" required />
