@@ -1,15 +1,13 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "package.json",
-        "use": "@vercel/next"
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next",
+      "config": {
+        "prisma": {
+          "generate": true
+        }
       }
-    ],
-    "routes": [
-      {
-        "src": "/api/socketio",
-        "dest": "/api/socketio.ts"
-      }
-    ]
-  }
+    }
+  ]
+}
