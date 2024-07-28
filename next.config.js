@@ -3,7 +3,8 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+    serverComponentsExternalPackages: ['@prisma/client', '@libsql/client'],
+
   },
   reactStrictMode: true,
   webpack: (config, { dev, isServer }) => {

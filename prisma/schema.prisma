@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("NEXT_PUBLIC_TURSO_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model AuthUser {
