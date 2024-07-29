@@ -83,6 +83,14 @@ export const personnel = sqliteTable('personnel', {
   month: text('month').notNull()
 });
 
+export const authUsers = sqliteTable('auth_users', {
+  id: integer('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(),
+  name: text('name').notNull(),
+  profilePicture: text('profile_picture'),
+});
+
 export const breakSchedules = sqliteTable('break_schedules', {
   id: integer('id').primaryKey(),
   personnelId: integer('personnel_id').notNull(),
@@ -140,6 +148,8 @@ export type UploadedFileSelect = typeof uploadedFiles.$inferSelect;
 export type UploadedFileInsert = typeof uploadedFiles.$inferInsert;
 export type SyncLogSelect = typeof syncLogs.$inferSelect;
 export type SyncLogInsert = typeof syncLogs.$inferInsert;
+export type AuthUser = typeof authUsers.$inferSelect;
+export type AuthUserInsert = typeof authUsers.$inferInsert;
 export type NovedadesRow = NewsSelect;
 export type MonthlyData = {
   month: string;
@@ -213,6 +223,17 @@ export async function ensureTablesExist() {
     console.log('NPS Trimestral table verified/created');
 
     await client.execute(`
+      CREATE TABLE IF NOT EXISTS auth_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        name TEXT NOT NULL,
+        profile_picture TEXT
+      )
+    `);
+    console.log('auth_users table verified/created');
+
+    await client.execute(`
       CREATE TABLE IF NOT EXISTS uploaded_files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         file_name TEXT NOT NULL,
@@ -269,6 +290,34 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
     throw new Error(`Failed to fetch monthly data: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+
+// Función para obtener un usuario por email
+export async function getUserByEmail(email: string): Promise<AuthUser | undefined> {
+  const db = getDB();
+  const result = await db.select().from(authUsers).where(eq(authUsers.email, email)).all();
+  return result[0];
+}
+
+// Función para crear un nuevo usuario
+export async function createUser(user: AuthUserInsert): Promise<AuthUser> {
+  const db = getDB();
+  await db.insert(authUsers).values(user).run();
+  return getUserByEmail(user.email) as Promise<AuthUser>;
+}
+
+// Función para actualizar un usuario
+export async function updateAuthUser(id: number, updates: Partial<AuthUserInsert>): Promise<void> {
+  const db = getDB();
+  await db.update(authUsers).set(updates).where(eq(authUsers.id, id)).run();
+}
+
+// Función para obtener un usuario por ID
+export async function getUserById(id: number): Promise<AuthUser | undefined> {
+  const db = getDB();
+  const result = await db.select().from(authUsers).where(eq(authUsers.id, id)).all();
+  return result[0];
+}
+
 
 // Personnel operations
 export async function getPersonnel(month?: string): Promise<PersonnelSelect[]> {
