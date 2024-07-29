@@ -66,6 +66,7 @@ const Navbar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
   const [profilePicture, setProfilePicture] = useState('/team/none.webp');
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   const fetchUserData = useCallback(async (token: string) => {
@@ -79,6 +80,7 @@ const Navbar: React.FC = () => {
         const userData = await response.json();
         setUserName(userData.name);
         setProfilePicture(userData.profilePicture || '/team/none.webp');
+        setIsAdmin(['prueba', 'admin', 'gaston'].includes(userData.name.toLowerCase()));
       } else {
         throw new Error('Failed to fetch user data');
       }
@@ -112,6 +114,7 @@ const Navbar: React.FC = () => {
     setIsLoggedIn(false);
     setUserName('');
     setProfilePicture('/team/none.webp');
+    setIsAdmin(false);
     router.push('/');
     toast.success('Has cerrado sesión correctamente');
   };
@@ -213,9 +216,11 @@ const Navbar: React.FC = () => {
             </div>
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
-                  Dashboard
-                </Link>
+                {isAdmin && (
+                  <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+                    Dashboard
+                  </Link>
+                )}
                 <div className="relative group">
                   <button
                     onClick={() => toggleDropdown('profile')}
@@ -248,14 +253,7 @@ const Navbar: React.FC = () => {
                   </Transition>
                 </div>
               </div>
-            ) : (
-              <Link href="/Login" className="items-center hidden px-4 py-2 transition-colors duration-200 bg-gray-900 rounded-md text-rose-400 md:inline-flex hover:bg-gray-700">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                </svg>
-                Iniciar sesión
-              </Link>
-            )}
+            ) : null}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 text-gray-700 rounded-md md:hidden hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
@@ -336,9 +334,11 @@ const Navbar: React.FC = () => {
               <div className="pt-4 pb-3 border-t border-pink-200">
                 {isLoggedIn ? (
                   <>
-                    <Link href="/dashboard" className="block px-3 py-2 text-base font-medium text-blue-600 rounded-md hover:text-blue-800 hover:bg-gray-50">
-                      Dashboard
-                    </Link>
+                    {isAdmin && (
+                      <Link href="/dashboard" className="block px-3 py-2 text-base font-medium text-blue-600 rounded-md hover:text-blue-800 hover:bg-gray-50">
+                        Dashboard
+                      </Link>
+                    )}
                     <div className="flex items-center px-3 py-2">
                       <div className="flex-shrink-0">
                         <Image src={profilePicture} alt="Profile" width={32} height={32} className="rounded-full" />
@@ -363,11 +363,7 @@ const Navbar: React.FC = () => {
                       </button>
                     </div>
                   </>
-                ) : (
-                  <Link href="/Login" className="block px-3 py-2 text-base font-medium rounded-md text-rose-400 hover:text-blue-600 hover:bg-gray-50">
-                    Iniciar sesión
-                  </Link>
-                )}
+                ) : null}
               </div>
             </div>
           </Transition>
