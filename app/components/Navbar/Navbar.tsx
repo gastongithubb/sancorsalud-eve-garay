@@ -80,7 +80,7 @@ const Navbar: React.FC = () => {
         const userData = await response.json();
         setUserName(userData.name);
         setProfilePicture(userData.profilePicture || '/team/none.webp');
-        setIsAdmin(['prueba', 'admin', 'gaston'].includes(userData.name.toLowerCase()));
+        setIsAdmin(['Usuario de Prueba', 'admin', 'Gaston'].includes(userData.name.toLowerCase()));
       } else {
         throw new Error('Failed to fetch user data');
       }
