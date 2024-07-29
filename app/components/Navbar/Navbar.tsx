@@ -80,7 +80,8 @@ const Navbar: React.FC = () => {
         const userData = await response.json();
         setUserName(userData.name);
         setProfilePicture(userData.profilePicture || '/team/none.webp');
-        setIsAdmin(['Usuario de Prueba', 'admin', 'Gaston'].includes(userData.name.toLowerCase()));
+        setIsAdmin(['prueba', 'admin', 'gaston'].includes(userData.name.toLowerCase()));
+        setIsLoggedIn(true);
       } else {
         throw new Error('Failed to fetch user data');
       }
@@ -94,7 +95,6 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      setIsLoggedIn(true);
       fetchUserData(token);
     }
 
@@ -214,46 +214,52 @@ const Navbar: React.FC = () => {
                 </div>
               ))}
             </div>
-            {isLoggedIn ? (
-              <div className="flex items-center space-x-4">
-                {isAdmin && (
-                  <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
-                    Dashboard
-                  </Link>
-                )}
-                <div className="relative group">
-                  <button
-                    onClick={() => toggleDropdown('profile')}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600"
-                  >
-                    <Image src={profilePicture} alt="Profile" width={32} height={32} className="rounded-full" />
-                    <span>{userName}</span>
-                  </button>
-                  <Transition
-                    show={dropdownOpen === 'profile'}
-                    enter="transition ease-out duration-100 transform"
-                    enterFrom="opacity-0 scale-95"
-                    enterTo="opacity-100 scale-100"
-                    leave="transition ease-in duration-75 transform"
-                    leaveFrom="opacity-100 scale-100"
-                    leaveTo="opacity-0 scale-95"
-                  >
-                    <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg">
-                      <label className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-blue-50">
-                        Cambiar Foto
-                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
-                      </label>
-                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                        Editar Perfil
-                      </Link>
-                      <button onClick={handleLogout} className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-blue-50">
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </Transition>
-                </div>
-              </div>
-            ) : null}
+            <div className="flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
+                  {isAdmin && (
+                    <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+                      Dashboard
+                    </Link>
+                  )}
+                  <div className="relative group">
+                    <button
+                      onClick={() => toggleDropdown('profile')}
+                      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600"
+                    >
+                      <Image src={profilePicture} alt="Profile" width={32} height={32} className="rounded-full" />
+                      <span>{userName}</span>
+                    </button>
+                    <Transition
+                      show={dropdownOpen === 'profile'}
+                      enter="transition ease-out duration-100 transform"
+                      enterFrom="opacity-0 scale-95"
+                      enterTo="opacity-100 scale-100"
+                      leave="transition ease-in duration-75 transform"
+                      leaveFrom="opacity-100 scale-100"
+                      leaveTo="opacity-0 scale-95"
+                    >
+                      <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg">
+                        <label className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-blue-50">
+                          Cambiar Foto
+                          <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
+                        </label>
+                        <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                          Editar Perfil
+                        </Link>
+                        <button onClick={handleLogout} className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-blue-50">
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    </Transition>
+                  </div>
+                </>
+              ) : (
+                <Link href="/Login" className="px-4 py-2 transition-colors duration-200 bg-gray-900 rounded-md text-rose-400 hover:bg-gray-700">
+                  Iniciar sesión
+                </Link>
+              )}
+            </div>
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 text-gray-700 rounded-md md:hidden hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
@@ -363,7 +369,11 @@ const Navbar: React.FC = () => {
                       </button>
                     </div>
                   </>
-                ) : null}
+                ) : (
+                  <Link href="/Login" className="block px-3 py-2 text-base font-medium rounded-md text-rose-400 hover:text-blue-600 hover:bg-gray-50">
+                    Iniciar sesión
+                  </Link>
+                )}
               </div>
             </div>
           </Transition>
