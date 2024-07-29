@@ -93,13 +93,14 @@ const CaseManagement: React.FC = () => {
           break;
         case 'empresas':
           message = `⚠️ FORMATO EMPRESAS 🌐
-  N° de Caso: ${caseData.empresas.numeroCaso}
-  Convenio: ${caseData.empresas.convenio}
-  Internación: ${caseData.empresas.internacion ? 'Sí' : 'No'}
-  Cx: ${caseData.empresas.cx ? 'Sí' : 'No'}
-  Ambulatorio: ${caseData.empresas.ambulatorio ? 'Sí' : 'No'}
-  Descripción del caso: ${caseData.empresas.descripcionCaso}`;
+  1️⃣ N° de Caso: ${caseData.empresas.numeroCaso}
+  2️⃣ Convenio: ${caseData.empresas.convenio}
+  3️⃣ Internación: ${caseData.empresas.internacion ? 'Sí' : 'No'}
+  4️⃣ Cx: ${caseData.empresas.cx ? 'Sí' : 'No'}
+  5️⃣ Ambulatorio: ${caseData.empresas.ambulatorio ? 'Sí' : 'No'}
+  6️⃣ Descripción del caso: ${caseData.empresas.descripcionCaso}`;
           break;
+  
         case 'f4':
           message = `📝 FORMATO F4 POR VALIDACIÓN PRACTICA ON-LINE
   1️⃣ Fecha de turno: ${caseData.f4.fechaTurno}
@@ -130,15 +131,15 @@ const CaseManagement: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">Gestión de Casos</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-2">Formato:</label>
+          <label className="block mb-2">Elegi el Formato:</label>
           <select
             value={format}
             onChange={handleFormatChange}
             className="w-full p-2 border rounded"
           >
             <option value="autorizaciones">Reclamo de Autorizaciones</option>
-            <option value="empresas">Reclamo de Autorizaciones Formato Empresas</option>
-            <option value="f4">Formato por rechazo de validacion Online</option>
+            <option value="empresas">Formato Empresas Reclamo de Autorizaciones </option>
+            <option value="f4">Formato F4 rechazo de validacion Online</option>
           </select>
         </div>
 
