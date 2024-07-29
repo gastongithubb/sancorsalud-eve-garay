@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decrypt, encrypt, JWTPayload } from "./lib/auth";
+import { decrypt, encrypt, CustomJWTPayload } from "./lib/auth";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
@@ -22,8 +22,8 @@ export async function middleware(request: NextRequest) {
       if (expirationTime - now < fiveMinutes) {
         console.log("Token near expiration, renewing...");
         // Si está cerca de expirar, renovamos el token
-        const newPayload: JWTPayload = {
-          userId: payload.userId,
+        const newPayload: CustomJWTPayload = {
+          ...payload,
           exp: Math.floor((now + 60 * 60 * 1000) / 1000), // Nueva expiración en 1 hora
         };
         const newToken = await encrypt(newPayload);
