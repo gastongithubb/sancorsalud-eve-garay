@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import Link from 'next/link';
 import ButtonComponent from '../Herramientas/ButtonComponent'
 
@@ -32,12 +32,12 @@ const Banner: React.FC = () => {
           <div className="relative">
             <Image 
               src="/Hero.svg" 
-              width={600} 
-              height={600} 
+              width={500} 
+              height={400} 
               alt="Hero" 
               className="transition-all duration-300 rounded-lg shadow-2xl filter brightness-110 hover:brightness-125"
             />
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-600/20 to-transparent"></div>
+            <div className="absolute inset-0 rounded-lg"></div>
           </div>
         </div>
       </div>

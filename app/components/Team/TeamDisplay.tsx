@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 
 // Definición del tipo para un miembro del equipo
 type TeamMember = {

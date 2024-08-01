@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getNews, addNews, deleteNews, updateNewsStatus, updateNews } from '@/utils/database';
 import type { NovedadesRow } from '@/utils/database';
+import { Loader2 } from 'lucide-react';
 
 const NewsManager: React.FC = () => {
   const [news, setNews] = useState<NovedadesRow[]>([]);
@@ -12,7 +13,21 @@ const NewsManager: React.FC = () => {
   const [newItem, setNewItem] = useState<Omit<NovedadesRow, 'id'>>({ url: '', title: '', publishDate: '', estado: 'activa' });
   const [editingItem, setEditingItem] = useState<NovedadesRow | null>(null);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastNewsElementRef = useCallback((node: HTMLLIElement | null) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        fetchNews(true);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
 
   useEffect(() => {
     fetchNews();
@@ -28,7 +43,24 @@ const NewsManager: React.FC = () => {
     setFilteredNews(filtered);
   }, [searchTerm, news]);
 
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/check-admin');
+        const data = await response.json();
+        setIsAdminLoggedIn(data.isAdmin);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdminLoggedIn(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
+
   const fetchNews = async (loadMore = false) => {
+    if (loading || (!loadMore && news.length > 0)) return;
+    setLoading(true);
     try {
       const newsData = await getNews(page, 10);
       if (loadMore) {
@@ -41,6 +73,8 @@ const NewsManager: React.FC = () => {
     } catch (err) {
       console.error('Error fetching news:', err);
       setError('Error al obtener las noticias');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,7 +131,6 @@ const NewsManager: React.FC = () => {
   };
 
   const showMessage = (message: string, type: 'error' | 'success') => {
-    // Implementa esto según tus necesidades, por ejemplo, usando un estado para mostrar mensajes
     console.log(`${type.toUpperCase()}: ${message}`);
   };
 
@@ -195,8 +228,12 @@ const NewsManager: React.FC = () => {
       </div>
 
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredNews.map((item) => (
-          <li key={item.id} className="bg-white p-4 rounded-lg shadow-card flex flex-col justify-between h-full">
+        {filteredNews.map((item, index) => (
+          <li 
+            key={item.id} 
+            ref={index === filteredNews.length - 1 ? lastNewsElementRef : null}
+            className="bg-white p-4 rounded-lg shadow-card flex flex-col justify-between h-full"
+          >
             {editingItem?.id === item.id ? (
               <div>
                 <input
@@ -250,12 +287,14 @@ const NewsManager: React.FC = () => {
                   >
                     Editar
                   </button>
-                  <button 
-                    onClick={() => handleDeleteNews(item.id)} 
-                    className="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-opacity-50 transition duration-300"
-                  >
-                    Eliminar
-                  </button>
+                  {isAdminLoggedIn && (
+                    <button 
+                      onClick={() => handleDeleteNews(item.id)} 
+                      className="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-opacity-50 transition duration-300"
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </>
             )}
@@ -263,14 +302,9 @@ const NewsManager: React.FC = () => {
         ))}
       </ul>
       
-      {hasMore && (
-        <div className="mt-4 text-center">
-          <button 
-            onClick={() => fetchNews(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 transition duration-300"
-          >
-            Cargar más
-          </button>
+      {loading && (
+        <div className="flex justify-center items-center mt-4">
+          <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
         </div>
       )}
     </div>

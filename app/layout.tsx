@@ -1,12 +1,10 @@
 import { Suspense } from 'react'
 import './globals.css'
-import { Providers } from './providers'  // Asegúrate de crear este archivo
+import { Providers } from './providers'
+import { AuthProvider } from './AuthContext'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 
-// Import components normally
-import Navbar from './components/Navbar/index'
-import Footer from './components/Footer/index'
-
-// Skeleton components
 const NavbarSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 const FooterSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 
@@ -37,15 +35,17 @@ export default function RootLayout({
       </head>
       <body className="flex flex-col min-h-screen font-sans">
         <Providers>
-          <Suspense fallback={<NavbarSkeleton />}>
-            <Navbar />
-          </Suspense>
-          <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
-            {children}
-          </main>
-          <Suspense fallback={<FooterSkeleton />}>
-            <Footer />
-          </Suspense>
+          <AuthProvider>
+            <Suspense fallback={<NavbarSkeleton />}>
+              <Navbar />
+            </Suspense>
+            <main className="flex-grow pt-24 sm:pt-28 md:pt-32 lg:pt-36">
+              {children}
+            </main>
+            <Suspense fallback={<FooterSkeleton />}>
+              <Footer />
+            </Suspense>
+          </AuthProvider>
         </Providers>
       </body>
     </html>

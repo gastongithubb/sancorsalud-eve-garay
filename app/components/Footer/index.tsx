@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 import Link from 'next/link';
 
 const Footer: React.FC = () => {
@@ -30,7 +30,7 @@ const Footer: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between py-6">
             <div className="mb-4 md:mb-0">
-              <Image src="/Logo.webp" alt="Logo" width={176} height={40} className="w-44" />
+              <Image src="/Logo.webp" alt="Logo" width={176} height={100} className="w-44" />
             </div>
             <div className="text-center md:text-right">
               <p>© {currentYear} Administración y Soporte <em>Gastón Alvarez</em></p>

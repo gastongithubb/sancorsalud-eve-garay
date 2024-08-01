@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPersonnel, getBreakSchedules, updateBreakSchedule, PersonnelSelect, BreakScheduleSelect } from '@/utils/database';
 import { User, Clock, Briefcase, Search, Coffee, Save, RefreshCw } from 'lucide-react';
-import Image from 'next/image';
+import Image from "next/legacy/image";
 
 type EmployeeCardProps = {
   employee: PersonnelSelect;
