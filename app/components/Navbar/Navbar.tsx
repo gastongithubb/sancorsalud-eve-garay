@@ -182,7 +182,7 @@ const Navbar: React.FC = () => {
             {isLoggedIn ? (
               <>
                 {isAdmin && (
-                  <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
+                  <Link href="/admin-dashboard" className="text-blue-600 hover:text-blue-800">
                     Dashboard
                   </Link>
                 )}
@@ -219,7 +219,7 @@ const Navbar: React.FC = () => {
                 </div>
               </>
             ) : (
-              <Link href="/login" className="px-4 py-2 transition-colors duration-200 bg-gray-900 rounded-md text-rose-400 hover:bg-gray-700">
+              <Link href="/Login" className="px-4 py-2 transition-colors duration-200 bg-gray-900 rounded-md text-rose-400 hover:bg-gray-700">
                 Iniciar sesión
               </Link>
             )}
