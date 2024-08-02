@@ -1,7 +1,7 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { eq, and, desc } from 'drizzle-orm';
 import { config } from './config';
 
@@ -83,6 +83,34 @@ export const personnel = sqliteTable('personnel', {
   month: text('month').notNull()
 });
 
+// Definición de la nueva tabla employee_metrics
+export const employeeMetrics = sqliteTable('employee_metrics', {
+  id: integer('id').primaryKey(),
+  nombre: text('nombre').notNull(),
+  fechaRegistro: text('fecha_registro').notNull(),
+  atendidas: integer('atendidas').notNull(),
+  tiempoAtencion: integer('tiempo_atencion').notNull(),
+  promTiempoAtencion: real('prom_tiempo_atencion').notNull(),
+  promTiempoRinging: real('prom_tiempo_ringing').notNull(),
+  qEncuestas: integer('q_encuestas').notNull(),
+  nps: integer('nps').notNull(),
+  sat: real('sat').notNull(),
+  rd: real('rd').notNull(),
+  diasLogueado: integer('dias_logueado').notNull(),
+  promLogueo: text('prom_logueo').notNull(),
+  porcentajeReady: real('porcentaje_ready').notNull(),
+  porcentajeAcd: real('porcentaje_acd').notNull(),
+  porcentajeNoDispTotal: real('porcentaje_no_disp_total').notNull(),
+  porcentajeNoDispNoProductivo: real('porcentaje_no_disp_no_productivo').notNull(),
+  porcentajeNoDispProductivo: real('porcentaje_no_disp_productivo').notNull(),
+  promedioCalidad: real('promedio_calidad').notNull(),
+  evActitudinal: text('ev_actitudinal'),
+  promLlamadasPorHora: real('prom_llamadas_por_hora').notNull(),
+  retencionOtrosFidelizables: real('retencion_otros_fidelizables').notNull(),
+  priorizacion: text('priorizacion').notNull()
+});
+
+
 export const authUsers = sqliteTable('auth_users', {
   id: integer('id').primaryKey(),
   email: text('email').notNull().unique(),
@@ -150,6 +178,8 @@ export type SyncLogSelect = typeof syncLogs.$inferSelect;
 export type SyncLogInsert = typeof syncLogs.$inferInsert;
 export type AuthUser = typeof authUsers.$inferSelect;
 export type AuthUserInsert = typeof authUsers.$inferInsert;
+export type EmployeeMetricSelect = typeof employeeMetrics.$inferSelect;
+export type EmployeeMetricInsert = typeof employeeMetrics.$inferInsert;
 export type NovedadesRow = NewsSelect;
 export type MonthlyData = {
   month: string;
@@ -184,6 +214,36 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('Personnel table verified/created');
+    
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS employee_metrics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        fecha_registro TEXT NOT NULL,
+        atendidas INTEGER NOT NULL,
+        tiempo_atencion INTEGER NOT NULL,
+        prom_tiempo_atencion REAL NOT NULL,
+        prom_tiempo_ringing REAL NOT NULL,
+        q_encuestas INTEGER NOT NULL,
+        nps INTEGER NOT NULL,
+        sat REAL NOT NULL,
+        rd REAL NOT NULL,
+        dias_logueado INTEGER NOT NULL,
+        prom_logueo TEXT NOT NULL,
+        porcentaje_ready REAL NOT NULL,
+        porcentaje_acd REAL NOT NULL,
+        porcentaje_no_disp_total REAL NOT NULL,
+        porcentaje_no_disp_no_productivo REAL NOT NULL,
+        porcentaje_no_disp_productivo REAL NOT NULL,
+        promedio_calidad REAL NOT NULL,
+        ev_actitudinal TEXT,
+        prom_llamadas_por_hora REAL NOT NULL,
+        retencion_otros_fidelizables REAL NOT NULL,
+        priorizacion TEXT NOT NULL
+      )
+    `);
+    console.log('Employee metrics table verified/created');
+
 
     await client.execute(`
       CREATE TABLE IF NOT EXISTS break_schedules (
@@ -665,6 +725,59 @@ export async function updateUser(user: PersonnelSelect): Promise<void> {
   } catch (error: unknown) {
     console.error('Error updating user:', error);
     throw new Error(`Failed to update user: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+
+export async function getEmployeeMetrics(nombre?: string): Promise<EmployeeMetricSelect[]> {
+  const db = getDB();
+  try {
+    await ensureTablesExist();
+    const query = db.select().from(employeeMetrics);
+    
+    if (nombre) {
+      return await query.where(eq(employeeMetrics.nombre, nombre)).all();
+    } else {
+      return await query.all();
+    }
+  } catch (error: unknown) {
+    console.error('Error fetching employee metrics:', error);
+    throw new Error(`Failed to fetch employee metrics: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function addEmployeeMetric(metric: EmployeeMetricInsert): Promise<void> {
+  const db = getDB();
+  try {
+    await ensureTablesExist();
+    await db.insert(employeeMetrics).values(metric).run();
+  } catch (error: unknown) {
+    console.error('Error adding employee metric:', error);
+    throw new Error(`Failed to add employee metric: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function updateEmployeeMetric(metric: EmployeeMetricSelect): Promise<void> {
+  const db = getDB();
+  try {
+    await db
+      .update(employeeMetrics)
+      .set(metric)
+      .where(eq(employeeMetrics.id, metric.id))
+      .run();
+  } catch (error: unknown) {
+    console.error('Error updating employee metric:', error);
+    throw new Error(`Failed to update employee metric: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function deleteEmployeeMetric(id: number): Promise<void> {
+  const db = getDB();
+  try {
+    await db.delete(employeeMetrics).where(eq(employeeMetrics.id, id)).run();
+  } catch (error: unknown) {
+    console.error('Error deleting employee metric:', error);
+    throw new Error(`Failed to delete employee metric: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

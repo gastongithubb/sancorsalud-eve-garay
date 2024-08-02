@@ -4,6 +4,7 @@ import { User } from '../types/user';
 let users: User[] = [
   { username: 'galvarez', password: 'password123', name: 'Gastón Álvarez', isAdmin: true },
   { username: 'egaray', password: 'password456', name: 'Evelin Garay', isAdmin: true },
+  { username: 'Ttulatraes', password: 'Tula.995', name: 'Carrizo Tula', isAdmin: true },
 ];
 
 // Mapa para almacenar la relación entre tokens y usuarios

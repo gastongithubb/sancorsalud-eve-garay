@@ -1,160 +1,186 @@
+// File: app/components/CallCenterDashboard.tsx
 'use client'
 
-import React, { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState, useMemo } from 'react'
+import { parseCSV, EmployeeMetrics } from '@/lib/excelParser'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
-interface User {
-  username: string;
-  password: string;
-  name: string;
-  isAdmin: boolean;
-}
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-export default function AdminDashboard() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [newUser, setNewUser] = useState<User>({ username: '', password: '', name: '', isAdmin: false });
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+const MetricCard: React.FC<{ title: string; value: number | string }> = ({ title, value }) => (
+  <div className="border p-4 rounded shadow">
+    <h3 className="font-bold text-sm">{title}</h3>
+    <p className="text-xl">{value}</p>
+  </div>
+)
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const res = await fetch('/api/check-admin');
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Not authorized');
-        }
-        await fetchUsers();
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        if (error instanceof Error) {
-          toast.error(error.message === 'Not authenticated' 
-            ? 'Please log in to access this page' 
-            : 'You are not authorized to view this page');
-        }
-        router.push('/Login');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, [router]);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch('/api/users');
-      if (!res.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await res.json();
-      setUsers(data.users);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to load users. Please try again.');
-    }
-  };
-
-  const handleAddUser = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to add user');
-      }
-
-      await fetchUsers();
-      setNewUser({ username: '', password: '', name: '', isAdmin: false });
-      toast.success('User added successfully');
-    } catch (error) {
-      console.error('Error adding user:', error);
-      toast.error('Failed to add user. Please try again.');
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+const EmployeeCard: React.FC<{ employee: EmployeeMetrics }> = ({ employee }) => {
+  const timeDistribution = [
+    { name: 'Ready', value: employee['% de Ready'] },
+    { name: 'ACD', value: employee['% de ACD'] },
+    { name: 'No Disp. Total', value: employee['% de No Disp. Total'] },
+  ];
 
   return (
-    <div className="container mx-auto p-4">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Users:</h2>
-        {users.length > 0 ? (
-          <ul className="bg-white shadow-md rounded-lg divide-y">
-            {users.map((user) => (
-              <li key={user.username} className="p-4 hover:bg-gray-50">
-                <span className="font-medium">{user.name}</span> ({user.username}) - 
-                <span className={user.isAdmin ? "text-green-600" : "text-blue-600"}>
-                  {user.isAdmin ? ' Admin' : ' User'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No users found.</p>
-        )}
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Add New User:</h2>
-        <form onSubmit={handleAddUser} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              value={newUser.username}
-              onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-              placeholder="Username"
-              required
-              className="w-full p-2 border rounded"
-            />
+    <div className="border p-4 rounded shadow mb-8">
+      <h2 className="text-2xl font-bold mb-4">{employee.nombre}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Métricas Clave</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <MetricCard title="Atendidas" value={employee.Atendidas} />
+            <MetricCard title="NPS" value={employee.NPS} />
+            <MetricCard title="SAT" value={`${employee.SAT}%`} />
+            <MetricCard title="RD" value={`${employee.RD}%`} />
           </div>
-          <div>
-            <input
-              type="password"
-              value={newUser.password}
-              onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-              placeholder="Password"
-              required
-              className="w-full p-2 border rounded"
-            />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Distribución de Tiempo</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={timeDistribution}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {timeDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Tiempos de Atención</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={[employee]}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="nombre" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Prom. T. Atención (min)" fill="#8884d8" />
+              <Bar dataKey="Prom. T Ringing (seg)" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Calidad y Retención</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <MetricCard title="Promedio Calidad" value={employee['Promedio Calidad']} />
+            <MetricCard title='Retención "Otros Fidelizables"' value={`${employee['Retención "Otros Fidelizables"']}%`} />
+            <MetricCard title="Priorización" value={employee['Priorización']} />
+            <MetricCard title="Prom. Llam. X hora" value={employee['Prom. Llam. X hora en función de Tiempo de habla y No disponible'].toFixed(1)} />
           </div>
-          <div>
-            <input
-              type="text"
-              value={newUser.name}
-              onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-              placeholder="Full Name"
-              required
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={newUser.isAdmin}
-                onChange={(e) => setNewUser({...newUser, isAdmin: e.target.checked})}
-                className="mr-2"
-              />
-              Is Admin
-            </label>
-          </div>
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Add User
-          </button>
-        </form>
+        </div>
       </div>
     </div>
+  )
+}
+
+export default function CallCenterDashboard() {
+  const [employees, setEmployees] = useState<EmployeeMetrics[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result;
+        if (typeof content === 'string') {
+          const parsedData = parseCSV(content);
+          setEmployees(parsedData);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleSaveAllEmployees = async () => {
+    setSaveStatus('saving');
+    try {
+      const response = await fetch('/api/save-employee', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(employees),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to save employees data');
+      }
+  
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000); // Reset status after 3 seconds
+    } catch (error) {
+      console.error('Error saving employees data:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000); // Reset status after 3 seconds
+    }
+  };
+
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(employee => 
+      employee.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [employees, searchTerm]);
+
+  return (
+    <main className="container mx-auto p-4">
+      <h1 className="text-4xl font-bold mb-8">Metricas mensuales</h1>
+      
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <input 
+            type="file" 
+            onChange={handleFileUpload} 
+            accept=".csv" 
+            className="mb-4 p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Buscar por nombre..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="ml-4 p-2 border rounded"
+          />
+        </div>
+        <button
+          onClick={handleSaveAllEmployees}
+          className={`px-4 py-2 rounded ${
+            saveStatus === 'idle' ? 'bg-blue-500 hover:bg-blue-600' :
+            saveStatus === 'saving' ? 'bg-yellow-500' :
+            saveStatus === 'saved' ? 'bg-green-500' :
+            'bg-red-500'
+          } text-white font-bold`}
+          disabled={saveStatus === 'saving' || employees.length === 0}
+        >
+          {saveStatus === 'idle' ? 'Guardar Todos' :
+           saveStatus === 'saving' ? 'Guardando...' :
+           saveStatus === 'saved' ? 'Guardado' :
+           'Error al guardar'}
+        </button>
+      </div>
+
+      {filteredEmployees.length > 0 ? (
+        filteredEmployees.map((employee, index) => (
+          <EmployeeCard 
+            key={index} 
+            employee={employee}
+          />
+        ))
+      ) : (
+        <p>No hay datos para mostrar. Por favor, cargue un archivo CSV o ajuste su búsqueda.</p>
+      )}
+    </main>
   );
 }
