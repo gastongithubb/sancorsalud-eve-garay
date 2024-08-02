@@ -87,27 +87,25 @@ export const personnel = sqliteTable('personnel', {
 export const employeeMetrics = sqliteTable('employee_metrics', {
   id: integer('id').primaryKey(),
   nombre: text('nombre').notNull(),
-  fechaRegistro: text('fecha_registro').notNull(),
-  atendidas: integer('atendidas').notNull(),
-  tiempoAtencion: integer('tiempo_atencion').notNull(),
-  promTiempoAtencion: real('prom_tiempo_atencion').notNull(),
-  promTiempoRinging: real('prom_tiempo_ringing').notNull(),
-  qEncuestas: integer('q_encuestas').notNull(),
-  nps: integer('nps').notNull(),
-  sat: real('sat').notNull(),
-  rd: real('rd').notNull(),
-  diasLogueado: integer('dias_logueado').notNull(),
-  promLogueo: text('prom_logueo').notNull(),
-  porcentajeReady: real('porcentaje_ready').notNull(),
-  porcentajeAcd: real('porcentaje_acd').notNull(),
-  porcentajeNoDispTotal: real('porcentaje_no_disp_total').notNull(),
-  porcentajeNoDispNoProductivo: real('porcentaje_no_disp_no_productivo').notNull(),
-  porcentajeNoDispProductivo: real('porcentaje_no_disp_productivo').notNull(),
-  promedioCalidad: real('promedio_calidad').notNull(),
-  evActitudinal: text('ev_actitudinal'),
-  promLlamadasPorHora: real('prom_llamadas_por_hora').notNull(),
-  retencionOtrosFidelizables: real('retencion_otros_fidelizables').notNull(),
-  priorizacion: text('priorizacion').notNull()
+  Atendidas: integer('Atendidas').notNull(),
+  'Tiempo Atencion': integer('Tiempo Atencion').notNull(),
+  'Prom. T. Atención (min)': real('Prom. T. Atención (min)'),
+  'Prom. T Ringing (seg)': real('Prom. T Ringing (seg)'),
+  'Q de Encuestas': integer('Q de Encuestas'),
+  NPS: integer('NPS').notNull(),
+  SAT: real('SAT').notNull(),
+  RD: real('RD').notNull(),
+  'Días Logueado': integer('Días Logueado').notNull(),
+  'Prom. Logueo': text('Prom. Logueo').notNull(),
+  '% de Ready': real('% de Ready').notNull(),
+  '% de ACD': real('% de ACD').notNull(),
+  '% de No Disp. Total': real('% de No Disp. Total').notNull(),
+  '% No Disp. No Productivo': real('% No Disp. No Productivo').notNull(),
+  '% No Disp. Productivo': real('% No Disp. Productivo').notNull(),
+  'Promedio Calidad': real('Promedio Calidad').notNull(),
+  'Ev. Actitudinal': text('Ev. Actitudinal'),
+  'Prom. Llam. X hora en función de Tiempo de habla y No disponible': real('Prom. Llam. X hora en función de Tiempo de habla y No disponible').notNull(),
+  'Priorización': text('Priorización').notNull()
 });
 
 
@@ -187,6 +185,7 @@ export type MonthlyData = {
   csat: number;
   rd: number;
 };
+
 
 
 // Database initialization
@@ -747,12 +746,47 @@ export async function getEmployeeMetrics(nombre?: string): Promise<EmployeeMetri
 }
 
 export async function addEmployeeMetric(metric: EmployeeMetricInsert): Promise<void> {
+  console.log('Adding employee metric for:', metric.nombre);
   const db = getDB();
   try {
     await ensureTablesExist();
-    await db.insert(employeeMetrics).values(metric).run();
+    console.log('Tables existence ensured');
+    
+    console.log('Metric to insert:', JSON.stringify(metric, null, 2));
+    
+    // Crear un objeto con los campos esperados, convirtiendo null a 0 o '' según corresponda
+    const sanitizedMetric: EmployeeMetricInsert = {
+      nombre: metric.nombre || '',
+      Atendidas: metric.Atendidas ?? 0,
+      'Tiempo Atencion': metric['Tiempo Atencion'] ?? 0,
+      'Prom. T. Atención (min)': metric['Prom. T. Atención (min)'] ?? 0,
+      'Prom. T Ringing (seg)': metric['Prom. T Ringing (seg)'] ?? 0,
+      'Q de Encuestas': metric['Q de Encuestas'] ?? 0,
+      NPS: metric.NPS ?? 0,
+      SAT: metric.SAT ?? 0,
+      RD: metric.RD ?? 0,
+      'Días Logueado': metric['Días Logueado'] ?? 0,
+      'Prom. Logueo': metric['Prom. Logueo'] || '',
+      '% de Ready': metric['% de Ready'] ?? 0,
+      '% de ACD': metric['% de ACD'] ?? 0,
+      '% de No Disp. Total': metric['% de No Disp. Total'] ?? 0,
+      '% No Disp. No Productivo': metric['% No Disp. No Productivo'] ?? 0,
+      '% No Disp. Productivo': metric['% No Disp. Productivo'] ?? 0,
+      'Promedio Calidad': metric['Promedio Calidad'] ?? 0,
+      'Ev. Actitudinal': metric['Ev. Actitudinal'] || '',
+      'Prom. Llam. X hora en función de Tiempo de habla y No disponible': 
+        metric['Prom. Llam. X hora en función de Tiempo de habla y No disponible'] ?? 0,
+      'Priorización': metric['Priorización'] || ''
+    };
+
+    await db.insert(employeeMetrics).values(sanitizedMetric).run();
+    console.log('Metric inserted successfully');
   } catch (error: unknown) {
     console.error('Error adding employee metric:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     throw new Error(`Failed to add employee metric: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

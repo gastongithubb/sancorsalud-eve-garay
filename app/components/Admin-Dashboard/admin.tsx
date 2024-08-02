@@ -107,6 +107,7 @@ export default function CallCenterDashboard() {
   const handleSaveAllEmployees = async () => {
     setSaveStatus('saving');
     try {
+      console.log('Data to be sent:', JSON.stringify(employees, null, 2));
       const response = await fetch('/api/save-employee', {
         method: 'POST',
         headers: {
@@ -116,15 +117,18 @@ export default function CallCenterDashboard() {
       });
   
       if (!response.ok) {
-        throw new Error('Failed to save employees data');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save employees data');
       }
   
       setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 3000); // Reset status after 3 seconds
-    } catch (error) {
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (error: unknown) {
       console.error('Error saving employees data:', error);
       setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000); // Reset status after 3 seconds
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      alert(`Error al guardar los datos: ${errorMessage}`);
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
 
