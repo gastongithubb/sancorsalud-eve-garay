@@ -124,7 +124,7 @@ const initialPractices: Practice[] = [
 ];
 
 export default function MedicalPracticesDashboard() {
-    const [practices, setPractices] = useState<Practice[]>([]);
+  const [practices, setPractices] = useState<Practice[]>(initialPractices);
     const [searchTerm, setSearchTerm] = useState('');
     const [newPractice, setNewPractice] = useState<Practice>({
       descripcion: '',
@@ -138,9 +138,6 @@ export default function MedicalPracticesDashboard() {
       const savedPractices = localStorage.getItem('medicalPractices');
       if (savedPractices) {
         setPractices(JSON.parse(savedPractices));
-      } else {
-        // Si no hay prácticas guardadas, usar las iniciales
-        setPractices(initialPractices);
       }
     }, []);
   

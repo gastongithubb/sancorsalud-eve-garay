@@ -4,13 +4,15 @@ import { Providers } from './providers'
 import { AuthProvider } from './AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import { Inter as FontSans } from "next/font/google"
+// Comentamos temporalmente la importación de la fuente
+// import { Inter } from "next/font/google"
 import { cn } from "@/lib/utils"
- 
-const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-})
+
+// Comentamos temporalmente la configuración de la fuente
+// const inter = Inter({
+//   subsets: ["latin"],
+//   display: 'swap',
+// })
 
 const NavbarSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 const FooterSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
@@ -30,20 +32,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
-        />
-      </head>
       <body className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}>
+  "min-h-screen bg-background antialiased",
+  "font-sans text-gray-900",
+  "font-['system-ui','-apple-system','BlinkMacSystemFont','Segoe_UI','Roboto','Oxygen','Ubuntu','Cantarell','Fira_Sans','Droid_Sans','Helvetica_Neue',sans-serif]"
+)}>
         <Providers>
           <AuthProvider>
             <Suspense fallback={<NavbarSkeleton />}>
