@@ -30,7 +30,7 @@ const Collapse: React.FC<{ label: string; index: number; children: React.ReactNo
         >
             <button 
                 className={`w-full p-5 text-left font-bold cursor-pointer rounded-lg transition-all duration-300 ${
-                    isOpen ? 'bg-blue-600 text-white' : 'bg-blue-900 text-offwhite hover:bg-blue-500'
+                    isOpen ? 'bg-blue-600 text-white' : 'bg-blue-900 text-white hover:bg-blue-500'
                 }`}
                 onClick={() => setIsOpen(!isOpen)}
             >
@@ -48,7 +48,7 @@ const Collapse: React.FC<{ label: string; index: number; children: React.ReactNo
             </button>
             {isOpen && (
                 <motion.div 
-                    className="p-5 mt-2 rounded-lg bg-blue-950 text-neutral-300"
+                    className="p-5 mt-2 rounded-lg bg-blue-950 text-neutral-200"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     transition={{ duration: 0.3 }}
@@ -62,7 +62,7 @@ const Collapse: React.FC<{ label: string; index: number; children: React.ReactNo
 
 const TeamMember: React.FC<{ member: any; index: number }> = ({ member, index }) => (
     <motion.div 
-        className="flex flex-col p-6 transition-all duration-300 border border-blue-200 shadow-lg bg-slate-600 rounded-2xl hover:border-blue-400"
+        className="flex flex-col p-6 transition-all duration-300 border border-blue-200 shadow-lg bg-white rounded-2xl hover:border-blue-400"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -72,11 +72,11 @@ const TeamMember: React.FC<{ member: any; index: number }> = ({ member, index })
                 <Image className="object-cover" src={member.profile} alt={member.name} layout="fill" />
             </div>
             <div>
-                <h3 className="text-xl font-semibold text-white">{member.name}</h3>
+                <h3 className="text-xl font-semibold text-black">{member.name}</h3>
                 <p className="text-bluish">{member.title}</p>
             </div>
         </div>
-        <p className="mb-4 text-sm text-slate-100">{member.description}</p>
+        <p className="mb-4 text-sm text-slate-800">{member.description}</p>
     </motion.div>
 );
 
@@ -84,7 +84,7 @@ const ProcessAndTeam: React.FC = () => {
     const firstThreeMembers = teamData.team.slice(0, 3);
 
     return (
-        <div className="container px-4 py-16 mx-auto text-stone-200">
+        <div className="container px-4 py-16 mx-auto text-stone-800">
             <Topic title="Nuestro Proceso" description="Guía paso a paso para alcanzar tus objetivos" />
 
             <div className="mb-16 space-y-6">
