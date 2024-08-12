@@ -4,6 +4,13 @@ import { Providers } from './providers'
 import { AuthProvider } from './AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import { Inter as FontSans } from "next/font/google"
+import { cn } from "@/lib/utils"
+ 
+const fontSans = FontSans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+})
 
 const NavbarSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
 const FooterSkeleton = () => <div className="h-16 bg-gray-200 animate-pulse"></div>
@@ -33,7 +40,10 @@ export default function RootLayout({
           href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
         />
       </head>
-      <body className="flex flex-col min-h-screen font-sans">
+      <body className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}>
         <Providers>
           <AuthProvider>
             <Suspense fallback={<NavbarSkeleton />}>
