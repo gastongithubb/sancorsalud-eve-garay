@@ -83,6 +83,16 @@ export const personnel = sqliteTable('personnel', {
   month: text('month').notNull()
 });
 
+export const trimetralMetrics = sqliteTable('trimestral_metrics', {
+  id: integer('id').primaryKey(),
+  employeeName: text('employee_name').notNull(),
+  month: text('month').notNull(),
+  Q: integer('Q').notNull(),
+  NPS: integer('NPS').notNull(),
+  SAT: real('SAT').notNull(),
+  RD: real('RD').notNull(),
+});
+
 // Definición de la nueva tabla employee_metrics
 export const employeeMetrics = sqliteTable('employee_metrics', {
   id: integer('id').primaryKey(),
@@ -178,6 +188,8 @@ export type AuthUser = typeof authUsers.$inferSelect;
 export type AuthUserInsert = typeof authUsers.$inferInsert;
 export type EmployeeMetricSelect = typeof employeeMetrics.$inferSelect;
 export type EmployeeMetricInsert = typeof employeeMetrics.$inferInsert;
+export type TrimestralMetricSelect = typeof trimetralMetrics.$inferSelect;
+export type TrimestralMetricInsert = typeof trimetralMetrics.$inferInsert;
 export type NovedadesRow = NewsSelect;
 export type MonthlyData = {
   month: string;
@@ -812,6 +824,53 @@ export async function deleteEmployeeMetric(id: number): Promise<void> {
   } catch (error: unknown) {
     console.error('Error deleting employee metric:', error);
     throw new Error(`Failed to delete employee metric: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to create the trimestral metrics table
+export async function createTrimestralMetricsTable() {
+  const client = getClient();
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS trimestral_metrics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_name TEXT NOT NULL,
+        month TEXT NOT NULL,
+        Q INTEGER NOT NULL,
+        NPS INTEGER NOT NULL,
+        SAT REAL NOT NULL,
+        RD REAL NOT NULL
+      )
+    `);
+    console.log('Trimestral metrics table created successfully');
+  } catch (error) {
+    console.error('Error creating trimestral metrics table:', error);
+    throw error;
+  }
+}
+
+// Function to insert trimestral metric
+export async function insertTrimestralMetric(metric: TrimestralMetricInsert): Promise<void> {
+  const db = getDB();
+  try {
+    await db.insert(trimetralMetrics).values(metric).run();
+  } catch (error: unknown) {
+    console.error('Error inserting trimestral metric:', error);
+    throw new Error(`Failed to insert trimestral metric: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to get trimestral metrics for an employee
+export async function getTrimestralMetrics(employeeName: string): Promise<TrimestralMetricSelect[]> {
+  const db = getDB();
+  try {
+    return await db.select()
+      .from(trimetralMetrics)
+      .where(eq(trimetralMetrics.employeeName, employeeName))
+      .all();
+  } catch (error: unknown) {
+    console.error('Error fetching trimestral metrics:', error);
+    throw new Error(`Failed to fetch trimestral metrics: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

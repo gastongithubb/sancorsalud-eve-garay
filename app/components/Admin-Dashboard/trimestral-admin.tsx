@@ -1,8 +1,9 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table"
+import { insertTrimestralMetric, getTrimestralMetrics, createTrimestralMetricsTable } from '@/utils/database';
 
 const MONTHS = ['MAYO', 'JUNIO', 'JULIO'];
 
@@ -160,8 +161,13 @@ const CalidadTable: React.FC<{ calidadData: CalidadData[] }> = ({ calidadData })
   </Card>
 );
 
-export const MetricasTrimestralDashboard: React.FC = () => {
+const MetricasTrimestralDashboard: React.FC = () => {
   const [csvData, setCsvData] = useState<{ employeeData: EmployeeData[], calidadData: CalidadData[] } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    createTrimestralMetricsTable();
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -178,6 +184,32 @@ export const MetricasTrimestralDashboard: React.FC = () => {
     }
   };
 
+  const saveToDatabase = async () => {
+    if (!csvData) return;
+
+    setIsSaving(true);
+    try {
+      for (const employee of csvData.employeeData) {
+        for (const month of MONTHS) {
+          await insertTrimestralMetric({
+            employeeName: employee.nombre,
+            month,
+            Q: employee.metrics[month].Q,
+            NPS: employee.metrics[month].NPS,
+            SAT: employee.metrics[month].SAT,
+            RD: employee.metrics[month].RD,
+          });
+        }
+      }
+      alert('Data saved successfully!');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Error saving data. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">Métricas Trimestrales Dashboard</h1>
@@ -187,6 +219,15 @@ export const MetricasTrimestralDashboard: React.FC = () => {
         accept=".csv"
         className="mb-4 p-2 border rounded"
       />
+      {csvData && (
+        <button
+          onClick={saveToDatabase}
+          disabled={isSaving}
+          className="mb-4 p-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+        >
+          {isSaving ? 'Saving...' : 'Save to Database'}
+        </button>
+      )}
       {csvData && (
         <>
           <CalidadTable calidadData={csvData.calidadData} />
