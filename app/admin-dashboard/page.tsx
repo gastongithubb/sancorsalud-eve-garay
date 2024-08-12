@@ -1,3 +1,4 @@
+'use client'
 import React, { useState } from 'react';
 import AdminDashboard from '../components/Admin-Dashboard/mensual';
 import MetricasTrimestralDashboard from '../components/Admin-Dashboard/trimestral-admin';
