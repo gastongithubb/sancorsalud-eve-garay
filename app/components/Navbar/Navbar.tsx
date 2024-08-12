@@ -13,7 +13,7 @@ const navLinks = [
     label: 'NPS', 
     dropdown: [
       { href: '/nps-individual', label: 'NPS Individual' },
-      { href: '/nps-trimestral', label: 'NPS Trimestral' },
+      { href: '/trimestral', label: 'NPS Trimestral' },
       { href: '/balance-mensual', label: 'Balance Mensual' },
       { href: '/metricas-equipo', label: 'Métricas Equipo' },
       { href: '/promotores', label: 'Promotores' }
