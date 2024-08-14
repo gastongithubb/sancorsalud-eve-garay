@@ -1,18 +1,23 @@
-// File: app/components/CallCenterDashboard.tsx
 'use client'
-
-import React, { useState, useMemo } from 'react'
-import { parseCSV, EmployeeMetrics } from '@/lib/excelParser'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import React, { useState, useEffect } from 'react';
+import { parseCSV, EmployeeMetrics } from '@/lib/excelParser';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table";
+import { insertEmployeeMetric, getEmployeeMetrics, createEmployeeMetricsTable } from '@/utils/database';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const MetricCard: React.FC<{ title: string; value: number | string }> = ({ title, value }) => (
-  <div className="border p-4 rounded shadow">
-    <h3 className="font-bold text-sm">{title}</h3>
-    <p className="text-xl">{value}</p>
-  </div>
-)
+  <Card>
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p className="text-2xl font-bold">{value}</p>
+    </CardContent>
+  </Card>
+);
 
 const EmployeeCard: React.FC<{ employee: EmployeeMetrics }> = ({ employee }) => {
   const timeDistribution = [
@@ -21,73 +26,100 @@ const EmployeeCard: React.FC<{ employee: EmployeeMetrics }> = ({ employee }) => 
     { name: 'No Disp. Total', value: employee['% de No Disp. Total'] },
   ];
 
+  const performanceData = [
+    { name: 'NPS', value: employee.NPS },
+    { name: 'SAT', value: employee.SAT },
+    { name: 'RD', value: employee.RD },
+  ];
+
   return (
-    <div className="border p-4 rounded shadow mb-8">
-      <h2 className="text-2xl font-bold mb-4">{employee.nombre}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Métricas Clave</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <MetricCard title="Atendidas" value={employee.Atendidas} />
-            <MetricCard title="NPS" value={employee.NPS} />
-            <MetricCard title="SAT" value={`${employee.SAT}%`} />
-            <MetricCard title="RD" value={`${employee.RD}%`} />
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>{employee.nombre}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Métricas Clave</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <MetricCard title="Atendidas" value={employee.Atendidas} />
+              <MetricCard title="NPS" value={employee.NPS} />
+              <MetricCard title="SAT" value={`${employee.SAT}%`} />
+              <MetricCard title="RD" value={`${employee.RD}%`} />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Distribución de Tiempo</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={timeDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {timeDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Tiempos de Atención</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={[employee]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="nombre" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Prom. T. Atención (min)" fill="#8884d8" />
+                <Bar dataKey="Prom. T Ringing (seg)" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Rendimiento</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="value" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Distribución de Tiempo</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={timeDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {timeDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Tiempos de Atención</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={[employee]}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="nombre" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Prom. T. Atención (min)" fill="#8884d8" />
-              <Bar dataKey="Prom. T Ringing (seg)" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Calidad y Retención</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <MetricCard title="Promedio Calidad" value={employee['Promedio Calidad']} />
-            <MetricCard title='Retención "Otros Fidelizables"' value={`${employee['Retención "Otros Fidelizables"']}%`} />
-            <MetricCard title="Priorización" value={employee['Priorización']} />
-            <MetricCard title="Prom. Llam. X hora" value={employee['Prom. Llam. X hora en función de Tiempo de habla y No disponible'].toFixed(1)} />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function CallCenterDashboard() {
   const [employees, setEmployees] = useState<EmployeeMetrics[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const initializeDatabase = async () => {
+      try {
+        await createEmployeeMetricsTable();
+        console.log('Employee metrics table initialized');
+      } catch (error) {
+        console.error('Error initializing employee metrics table:', error);
+      }
+    };
+  
+    initializeDatabase();
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -104,43 +136,51 @@ export default function CallCenterDashboard() {
     }
   };
 
-  const handleSaveAllEmployees = async () => {
-    setSaveStatus('saving');
+  const saveToDatabase = async () => {
+    if (employees.length === 0) return;
+  
+    setIsSaving(true);
     try {
-      console.log('Data to be sent:', JSON.stringify(employees, null, 2));
-      const response = await fetch('/api/save-employee', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(employees),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save employees data');
+      for (const employee of employees) {
+        await insertEmployeeMetric({
+          nombre: employee.nombre,
+          Atendidas: employee.Atendidas,
+          'Tiempo Atencion': employee['Tiempo Atencion'],
+          'Prom. T. Atención (min)': employee['Prom. T. Atención (min)'],
+          'Prom. T Ringing (seg)': employee['Prom. T Ringing (seg)'],
+          'Q de Encuestas': employee['Q de Encuestas'],
+          NPS: employee.NPS,
+          SAT: employee.SAT,
+          RD: employee.RD,
+          'Días Logueado': employee['Días Logueado'],
+          'Prom. Logueo': employee['Prom. Logueo'],
+          '% de Ready': employee['% de Ready'],
+          '% de ACD': employee['% de ACD'],
+          '% de No Disp. Total': employee['% de No Disp. Total'],
+          '% No Disp. No Productivo': employee['% No Disp. No Productivo'],
+          '% No Disp. Productivo': employee['% No Disp. Productivo'],
+          'Promedio Calidad': employee['Promedio Calidad'],
+          'Ev. Actitudinal': employee['Ev. Actitudinal'],
+          'Prom. Llam. X hora en función de Tiempo de habla y No disponible': employee['Prom. Llam. X hora en función de Tiempo de habla y No disponible'],
+          'Priorización': employee['Priorización']
+        });
       }
-  
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (error: unknown) {
-      console.error('Error saving employees data:', error);
-      setSaveStatus('error');
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      alert(`Error al guardar los datos: ${errorMessage}`);
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      alert('Data saved successfully!');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Error saving data. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(employee => 
-      employee.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [employees, searchTerm]);
+  const filteredEmployees = employees.filter(employee => 
+    employee.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <main className="container mx-auto p-4">
-      <h1 className="text-4xl font-bold mb-8">Metricas mensuales</h1>
+      <h1 className="text-4xl font-bold mb-8">Métricas Mensuales</h1>
       
       <div className="mb-8 flex justify-between items-center">
         <div>
@@ -159,20 +199,12 @@ export default function CallCenterDashboard() {
           />
         </div>
         <button
-          onClick={handleSaveAllEmployees}
-          className={`px-4 py-2 rounded ${
-            saveStatus === 'idle' ? 'bg-blue-500 hover:bg-blue-600' :
-            saveStatus === 'saving' ? 'bg-yellow-500' :
-            saveStatus === 'saved' ? 'bg-green-500' :
-            'bg-red-500'
-          } text-white font-bold`}
-          disabled={saveStatus === 'saving' || employees.length === 0}
-        >
-          {saveStatus === 'idle' ? 'Guardar Todos' :
-           saveStatus === 'saving' ? 'Guardando...' :
-           saveStatus === 'saved' ? 'Guardado' :
-           'Error al guardar'}
-        </button>
+  onClick={saveToDatabase}
+  disabled={isSaving || employees.length === 0}
+  className="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white font-bold disabled:bg-gray-400"
+>
+  {isSaving ? 'Guardando...' : 'Guardar en Base de Datos'}
+</button>
       </div>
 
       {filteredEmployees.length > 0 ? (

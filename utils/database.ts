@@ -1,6 +1,6 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { sql } from 'drizzle-orm';
+import { gte, lte, sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { eq, and, desc } from 'drizzle-orm';
 import { config } from './config';
@@ -93,7 +93,6 @@ export const trimetralMetrics = sqliteTable('trimestral_metrics', {
   RD: real('RD').notNull(),
 });
 
-// Definición de la nueva tabla employee_metrics
 export const employeeMetrics = sqliteTable('employee_metrics', {
   id: integer('id').primaryKey(),
   nombre: text('nombre').notNull(),
@@ -117,7 +116,6 @@ export const employeeMetrics = sqliteTable('employee_metrics', {
   'Prom. Llam. X hora en función de Tiempo de habla y No disponible': real('Prom. Llam. X hora en función de Tiempo de habla y No disponible').notNull(),
   'Priorización': text('Priorización').notNull()
 });
-
 
 export const authUsers = sqliteTable('auth_users', {
   id: integer('id').primaryKey(),
@@ -186,8 +184,8 @@ export type SyncLogSelect = typeof syncLogs.$inferSelect;
 export type SyncLogInsert = typeof syncLogs.$inferInsert;
 export type AuthUser = typeof authUsers.$inferSelect;
 export type AuthUserInsert = typeof authUsers.$inferInsert;
-export type EmployeeMetricSelect = typeof employeeMetrics.$inferSelect;
 export type EmployeeMetricInsert = typeof employeeMetrics.$inferInsert;
+export type EmployeeMetricSelect = typeof employeeMetrics.$inferSelect;
 export type TrimestralMetricSelect = typeof trimetralMetrics.$inferSelect;
 export type TrimestralMetricInsert = typeof trimetralMetrics.$inferInsert;
 export type NovedadesRow = NewsSelect;
@@ -198,14 +196,13 @@ export type MonthlyData = {
   rd: number;
 };
 
-
-
-// Database initialization
+// Database initialization and table creation functions
 export async function ensureTablesExist() {
   const client = getClient();
   try {
     console.log('Starting table verification...');
 
+    // Create personnel table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS personnel (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -225,37 +222,8 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('Personnel table verified/created');
-    
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS employee_metrics (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        fecha_registro TEXT NOT NULL,
-        atendidas INTEGER NOT NULL,
-        tiempo_atencion INTEGER NOT NULL,
-        prom_tiempo_atencion REAL NOT NULL,
-        prom_tiempo_ringing REAL NOT NULL,
-        q_encuestas INTEGER NOT NULL,
-        nps INTEGER NOT NULL,
-        sat REAL NOT NULL,
-        rd REAL NOT NULL,
-        dias_logueado INTEGER NOT NULL,
-        prom_logueo TEXT NOT NULL,
-        porcentaje_ready REAL NOT NULL,
-        porcentaje_acd REAL NOT NULL,
-        porcentaje_no_disp_total REAL NOT NULL,
-        porcentaje_no_disp_no_productivo REAL NOT NULL,
-        porcentaje_no_disp_productivo REAL NOT NULL,
-        promedio_calidad REAL NOT NULL,
-        ev_actitudinal TEXT,
-        prom_llamadas_por_hora REAL NOT NULL,
-        retencion_otros_fidelizables REAL NOT NULL,
-        priorizacion TEXT NOT NULL
-      )
-    `);
-    console.log('Employee metrics table verified/created');
 
-
+    // Create break_schedules table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS break_schedules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -271,6 +239,7 @@ export async function ensureTablesExist() {
     `);
     console.log('Break schedules table verified/created');
 
+    // Create news table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS news (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -282,6 +251,7 @@ export async function ensureTablesExist() {
     `);
     console.log('News table verified/created');
 
+    // Create nps_trimestral table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS nps_trimestral (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -293,6 +263,7 @@ export async function ensureTablesExist() {
     `);
     console.log('NPS Trimestral table verified/created');
 
+    // Create auth_users table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS auth_users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -304,6 +275,7 @@ export async function ensureTablesExist() {
     `);
     console.log('auth_users table verified/created');
 
+    // Create uploaded_files table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS uploaded_files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -318,6 +290,7 @@ export async function ensureTablesExist() {
     `);
     console.log('Uploaded files table verified/created');
 
+    // Create sync_logs table
     await client.execute(`
       CREATE TABLE IF NOT EXISTS sync_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -336,7 +309,42 @@ export async function ensureTablesExist() {
   }
 }
 
-// Función para obtener datos mensuales (si no existe, la añadimos)
+export async function createEmployeeMetricsTable() {
+  const client = getClient();
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS employee_metrics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        Atendidas INTEGER NOT NULL,
+        TiempoAtencion INTEGER NOT NULL,
+        PromTAtencionMin REAL,
+        PromTRingingSeg REAL,
+        QdeEncuestas INTEGER,
+        NPS INTEGER NOT NULL,
+        SAT REAL NOT NULL,
+        RD REAL NOT NULL,
+        DiasLogueado INTEGER NOT NULL,
+        PromLogueo TEXT NOT NULL,
+        PorcentajeReady REAL NOT NULL,
+        PorcentajeACD REAL NOT NULL,
+        PorcentajeNoDispTotal REAL NOT NULL,
+        PorcentajeNoDispNoProductivo REAL NOT NULL,
+        PorcentajeNoDispProductivo REAL NOT NULL,
+        PromedioCalidad REAL NOT NULL,
+        EvActitudinal TEXT,
+        PromLlamXHora REAL NOT NULL,
+        Priorizacion TEXT NOT NULL
+      )
+    `);
+    console.log('Employee metrics table created successfully');
+  } catch (error) {
+    console.error('Error creating employee metrics table:', error);
+    throw error;
+  }
+}
+
+// Database operations
 export async function getMonthlyData(): Promise<MonthlyData[]> {
   const db = getDB();
   try {
@@ -362,35 +370,29 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
   }
 }
 
-// Función para obtener un usuario por email
 export async function getUserByEmail(email: string): Promise<AuthUser | undefined> {
   const db = getDB();
   const result = await db.select().from(authUsers).where(eq(authUsers.email, email)).all();
   return result[0];
 }
 
-// Función para crear un nuevo usuario
 export async function createUser(user: AuthUserInsert): Promise<AuthUser> {
   const db = getDB();
   await db.insert(authUsers).values(user).run();
   return getUserByEmail(user.email) as Promise<AuthUser>;
 }
 
-// Función para actualizar un usuario
 export async function updateAuthUser(id: number, updates: Partial<AuthUserInsert>): Promise<void> {
   const db = getDB();
   await db.update(authUsers).set(updates).where(eq(authUsers.id, id)).run();
 }
 
-// Función para obtener un usuario por ID
 export async function getUserById(id: number): Promise<AuthUser | undefined> {
   const db = getDB();
   const result = await db.select().from(authUsers).where(eq(authUsers.id, id)).all();
   return result[0];
 }
 
-
-// Personnel operations
 export async function getPersonnel(month?: string): Promise<PersonnelSelect[]> {
   const db = getDB();
   try {
@@ -446,7 +448,6 @@ export async function updatePersonnelXLite(id: number, xLite: string): Promise<v
   }
 }
 
-// Break schedule operations
 export async function getBreakSchedules(personnelId: number, month: number, year: number): Promise<BreakScheduleSelect[]> {
   const db = getDB();
   try {
@@ -498,7 +499,6 @@ export async function updateBreakSchedule(schedule: BreakScheduleInsert): Promis
   }
 }
 
-// News operations
 export async function getNews(page: number = 1, limit: number = 10): Promise<NewsSelect[]> {
   const db = getDB();
   try {
@@ -569,10 +569,6 @@ export async function updateNews(newsItem: NewsSelect): Promise<void> {
   }
 }
 
-// NPS Trimestral operations
-// ... (código anterior)
-
-// NPS Trimestral operations
 export async function getNPSTrimestral(personnelId: number): Promise<NPSTrimestralSelect[]> {
   const db = getDB();
   try {
@@ -607,10 +603,6 @@ export async function updateNPSTrimestral(personnelId: number, month: string, np
   }
 }
 
-// Uploaded Files operations
-// Uploaded Files operations
-
-
 export async function updateProcessedData(fileId: number, processedData: string): Promise<void> {
   const db = getDB();
   try {
@@ -625,7 +617,6 @@ export async function updateProcessedData(fileId: number, processedData: string)
   }
 }
 
-// Sync log operations
 export async function logSync(sheetName: string, lastSyncedRow: number, status: string): Promise<void> {
   const db = getDB();
   try {
@@ -682,7 +673,6 @@ export async function syncSheetsToTurso(sheetName: string, data: any[]): Promise
   }
 }
 
-// Function to close the database connection
 export async function closeDatabase() {
   if (client) {
     try {
@@ -694,7 +684,6 @@ export async function closeDatabase() {
   }
 }
 
-// Function to reset the database connection
 export async function resetDatabaseConnection() {
   try {
     if (client) {
@@ -708,7 +697,6 @@ export async function resetDatabaseConnection() {
   }
 }
 
-// Utility function to run migrations
 export async function runMigrations() {
   const client = getClient();
   try {
@@ -723,7 +711,6 @@ export async function runMigrations() {
   }
 }
 
-// Function to update a user
 export async function updateUser(user: PersonnelSelect): Promise<void> {
   const db = getDB();
   try {
@@ -738,7 +725,6 @@ export async function updateUser(user: PersonnelSelect): Promise<void> {
     throw new Error(`Failed to update user: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
-
 
 export async function getEmployeeMetrics(nombre?: string): Promise<EmployeeMetricSelect[]> {
   const db = getDB();
@@ -757,51 +743,17 @@ export async function getEmployeeMetrics(nombre?: string): Promise<EmployeeMetri
   }
 }
 
-export async function addEmployeeMetric(metric: EmployeeMetricInsert): Promise<void> {
-  console.log('Adding employee metric for:', metric.nombre);
+export async function insertEmployeeMetric(metric: EmployeeMetricInsert): Promise<void> {
   const db = getDB();
   try {
-    await ensureTablesExist();
-    console.log('Tables existence ensured');
-    
-    console.log('Metric to insert:', JSON.stringify(metric, null, 2));
-    
-    // Crear un objeto con los campos esperados, convirtiendo null a 0 o '' según corresponda
-    const sanitizedMetric: EmployeeMetricInsert = {
-      nombre: metric.nombre || '',
-      Atendidas: metric.Atendidas ?? 0,
-      'Tiempo Atencion': metric['Tiempo Atencion'] ?? 0,
-      'Prom. T. Atención (min)': metric['Prom. T. Atención (min)'] ?? 0,
-      'Prom. T Ringing (seg)': metric['Prom. T Ringing (seg)'] ?? 0,
-      'Q de Encuestas': metric['Q de Encuestas'] ?? 0,
-      NPS: metric.NPS ?? 0,
-      SAT: metric.SAT ?? 0,
-      RD: metric.RD ?? 0,
-      'Días Logueado': metric['Días Logueado'] ?? 0,
-      'Prom. Logueo': metric['Prom. Logueo'] || '',
-      '% de Ready': metric['% de Ready'] ?? 0,
-      '% de ACD': metric['% de ACD'] ?? 0,
-      '% de No Disp. Total': metric['% de No Disp. Total'] ?? 0,
-      '% No Disp. No Productivo': metric['% No Disp. No Productivo'] ?? 0,
-      '% No Disp. Productivo': metric['% No Disp. Productivo'] ?? 0,
-      'Promedio Calidad': metric['Promedio Calidad'] ?? 0,
-      'Ev. Actitudinal': metric['Ev. Actitudinal'] || '',
-      'Prom. Llam. X hora en función de Tiempo de habla y No disponible': 
-        metric['Prom. Llam. X hora en función de Tiempo de habla y No disponible'] ?? 0,
-      'Priorización': metric['Priorización'] || ''
-    };
-
-    await db.insert(employeeMetrics).values(sanitizedMetric).run();
-    console.log('Metric inserted successfully');
-  } catch (error: unknown) {
-    console.error('Error adding employee metric:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    throw new Error(`Failed to add employee metric: ${error instanceof Error ? error.message : String(error)}`);
+    await db.insert(employeeMetrics).values(metric).run();
+    console.log('Employee metric inserted successfully');
+  } catch (error) {
+    console.error('Error inserting employee metric:', error);
+    throw new Error(`Failed to insert employee metric: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+
 
 export async function updateEmployeeMetric(metric: EmployeeMetricSelect): Promise<void> {
   const db = getDB();
@@ -827,7 +779,6 @@ export async function deleteEmployeeMetric(id: number): Promise<void> {
   }
 }
 
-// Function to create the trimestral metrics table
 export async function createTrimestralMetricsTable() {
   const client = getClient();
   try {
@@ -849,7 +800,6 @@ export async function createTrimestralMetricsTable() {
   }
 }
 
-// Function to insert trimestral metric
 export async function insertTrimestralMetric(metric: TrimestralMetricInsert): Promise<void> {
   const db = getDB();
   try {
@@ -860,21 +810,118 @@ export async function insertTrimestralMetric(metric: TrimestralMetricInsert): Pr
   }
 }
 
-// Function to get trimestral metrics for an employee
-export async function getTrimestralMetrics(employeeName: string): Promise<TrimestralMetricSelect[]> {
+export async function getTrimestralMetrics(month?: string): Promise<TrimestralMetricSelect[]> {
   const db = getDB();
   try {
-    return await db.select()
-      .from(trimetralMetrics)
-      .where(eq(trimetralMetrics.employeeName, employeeName))
-      .all();
-  } catch (error: unknown) {
+    const query = db.select().from(trimetralMetrics);
+    if (month) {
+      return query.where(eq(trimetralMetrics.month, month)).all();
+    }
+    return query.all();
+  } catch (error) {
     console.error('Error fetching trimestral metrics:', error);
     throw new Error(`Failed to fetch trimestral metrics: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
+export async function updateTrimestralMetric(metric: TrimestralMetricSelect): Promise<void> {
+  const db = getDB();
+  try {
+    await db
+      .update(trimetralMetrics)
+      .set(metric)
+      .where(eq(trimetralMetrics.id, metric.id))
+      .run();
+  } catch (error: unknown) {
+    console.error('Error updating trimestral metric:', error);
+    throw new Error(`Failed to update trimestral metric: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 
+export async function deleteTrimestralMetric(id: number): Promise<void> {
+  const db = getDB();
+  try {
+    await db.delete(trimetralMetrics).where(eq(trimetralMetrics.id, id)).run();
+  } catch (error: unknown) {
+    console.error('Error deleting trimestral metric:', error);
+    throw new Error(`Failed to delete trimestral metric: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 
+// Utility function to sanitize input for employee metrics
 
-export { eq, and, desc };
+// Function to get the total count of employee metrics
+export async function getEmployeeMetricsCount(): Promise<number> {
+  const db = getDB();
+  try {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(employeeMetrics).all();
+    return result[0].count;
+  } catch (error) {
+    console.error('Error getting employee metrics count:', error);
+    throw new Error(`Failed to get employee metrics count: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to get paginated employee metrics
+export async function getPaginatedEmployeeMetrics(page: number, pageSize: number): Promise<EmployeeMetricSelect[]> {
+  const db = getDB();
+  try {
+    const offset = (page - 1) * pageSize;
+    return await db.select()
+      .from(employeeMetrics)
+      .limit(pageSize)
+      .offset(offset)
+      .all();
+  } catch (error) {
+    console.error('Error fetching paginated employee metrics:', error);
+    throw new Error(`Failed to fetch paginated employee metrics: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to get employee metrics for a specific date range
+export async function getEmployeeMetricsByDateRange(startDate: string, endDate: string): Promise<EmployeeMetricSelect[]> {
+  const db = getDB();
+  try {
+    return await db.select()
+      .from(employeeMetrics)
+      .where(
+        and(
+          gte(employeeMetrics['Días Logueado'], parseInt(startDate)),
+          lte(employeeMetrics['Días Logueado'], parseInt(endDate))
+        )
+      )
+      .all();
+  } catch (error) {
+    console.error('Error fetching employee metrics by date range:', error);
+    throw new Error(`Failed to fetch employee metrics by date range: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to get average metrics for all employees
+export async function getAverageEmployeeMetrics(): Promise<Partial<EmployeeMetricSelect>> {
+  const db = getDB();
+  try {
+    const result = await db.select({
+      Atendidas: sql<number>`AVG(${employeeMetrics.Atendidas})`.as('avgAtendidas'),
+      NPS: sql<number>`AVG(${employeeMetrics.NPS})`.as('avgNPS'),
+      SAT: sql<number>`AVG(${employeeMetrics.SAT})`.as('avgSAT'),
+      RD: sql<number>`AVG(${employeeMetrics.RD})`.as('avgRD'),
+      '% de Ready': sql<number>`AVG(${employeeMetrics['% de Ready']})`.as('avgPorcentajeReady'),
+      '% de ACD': sql<number>`AVG(${employeeMetrics['% de ACD']})`.as('avgPorcentajeACD'),
+      'Promedio Calidad': sql<number>`AVG(${employeeMetrics['Promedio Calidad']})`.as('avgPromedioCalidad'),
+    }).from(employeeMetrics).get();
+
+    return result || {};
+  } catch (error) {
+    console.error('Error getting average employee metrics:', error);
+    throw new Error(`Failed to get average employee metrics: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Export all the necessary functions and types
+export {
+  eq,
+  and,
+  desc,
+  sql,
+};
