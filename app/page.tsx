@@ -10,7 +10,7 @@ import Team from './components/Team';
 import Faq from './components/Faq';
 
 export default function ClientHome() {
-  const { isLoggedIn, userName } = useAuth()
+  const { isLoggedIn } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
