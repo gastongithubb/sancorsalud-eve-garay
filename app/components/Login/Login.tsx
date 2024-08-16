@@ -2,7 +2,7 @@
 
 import React, { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../AuthContext';
+import { useAuth } from '@/app/AuthContext';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -18,21 +18,10 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (res.ok) {
-        const userData = await res.json();
-        login(userData);
-        router.push('/');
-      } else {
-        setError('Inicio de sesión fallido. Por favor, verifica tus credenciales.');
-      }
+      await login(username, password);
+      router.push('/');  // Redirige a la página principal después del login exitoso
     } catch (err) {
-      setError('Ocurrió un error. Por favor, inténtalo de nuevo más tarde.');
+      setError('Inicio de sesión fallido. Por favor, verifica tus credenciales.');
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-// app/api/login/route.ts
 import { NextResponse } from 'next/server';
 import { findUser, generateToken, setUserToken } from '@/utils/users';
 import { serialize } from 'cookie';
@@ -21,7 +20,7 @@ export async function POST(request: Request) {
       path: '/'
     });
 
-    return new NextResponse(JSON.stringify({ success: true, isAdmin: user.isAdmin }), {
+    return new NextResponse(JSON.stringify({ success: true, user }), {
       status: 200,
       headers: { 'Set-Cookie': cookie }
     });

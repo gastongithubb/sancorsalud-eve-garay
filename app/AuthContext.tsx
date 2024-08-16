@@ -1,71 +1,94 @@
 'use client';
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { User } from '../types/user';
+import { findUserByToken, setUserToken, removeUserToken, generateToken, findUser } from '../utils/users';
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  userName: string;
-  profilePicture: string;
+  user: User | null;
   isAdmin: boolean;
-  login: (userData: any) => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedUser: User) => void;
+  getToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [profilePicture, setProfilePicture] = useState('/team/none.webp');
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetchUserData(token);
+      const user = findUserByToken(token);
+      if (user) {
+        setIsLoggedIn(true);
+        setUser(user);
+        setIsAdmin(user.isAdmin);
+      } else {
+        localStorage.removeItem('token');
+      }
     }
+    setIsLoading(false);
   }, []);
 
-  const fetchUserData = async (token: string) => {
+  const login = async (username: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        setUserName(userData.name);
-        setProfilePicture(userData.profilePicture || '/team/none.webp');
-        setIsAdmin(userData.isAdmin);
+      const user = findUser(username, password);
+      if (user) {
+        const token = generateToken();
+        setUserToken(user, token);
+        localStorage.setItem('token', token);
         setIsLoggedIn(true);
+        setUser(user);
+        setIsAdmin(user.isAdmin);
+        console.log('Token saved:', token); // Add this log
       } else {
-        throw new Error('Failed to fetch user data');
+        throw new Error('Credenciales inválidas');
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      logout();
+      console.error('Error during login:', error);
+      setError('Error durante el inicio de sesión');
+      setIsLoggedIn(false);
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const login = (userData: any) => {
-    setIsLoggedIn(true);
-    setUserName(userData.name);
-    setProfilePicture(userData.profilePicture || '/team/none.webp');
-    setIsAdmin(userData.isAdmin);
-    localStorage.setItem('token', userData.token);
   };
 
   const logout = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      removeUserToken(token);
+    }
     setIsLoggedIn(false);
-    setUserName('');
-    setProfilePicture('/team/none.webp');
+    setUser(null);
     setIsAdmin(false);
+    setError(null);
     localStorage.removeItem('token');
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
+  const getToken = () => {
+    const token = localStorage.getItem('token');
+    console.log('Retrieved token:', token); // Add this log
+    return token;
+  };
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userName, profilePicture, isAdmin, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, isAdmin, isLoading, error, login, logout, updateUser, getToken }}>
       {children}
     </AuthContext.Provider>
   );

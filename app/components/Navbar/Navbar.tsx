@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from "next/legacy/image";
 import { useRouter } from 'next/navigation';
@@ -64,7 +64,7 @@ const Navbar: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
-  const { isLoggedIn, userName, profilePicture, isAdmin, logout } = useAuth();
+  const { isLoggedIn, user, isAdmin, logout, updateUser, getToken } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,6 +72,11 @@ const Navbar: React.FC = () => {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    console.log('Token in Navbar:', token);
   }, []);
 
   const toggleDropdown = (label: string) => {
@@ -91,7 +96,13 @@ const Navbar: React.FC = () => {
       formData.append('profilePicture', file);
 
       try {
-        const token = localStorage.getItem('token');
+        const token = getToken();
+        console.log('Token for update:', token); // Add this log
+
+        if (!token) {
+          throw new Error('No se encontró el token de autenticación');
+        }
+
         const response = await fetch('/api/update-profile-picture', {
           method: 'POST',
           headers: {
@@ -100,17 +111,26 @@ const Navbar: React.FC = () => {
           body: formData
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          // Actualizar el estado global con la nueva imagen de perfil
-          // Esto dependerá de cómo hayas implementado la actualización en tu AuthContext
+        console.log('Response status:', response.status); // Add this log
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error response:', errorData); // Add this log
+          throw new Error(errorData.message || 'Error al actualizar la foto de perfil');
+        }
+
+        const result = await response.json();
+        console.log('Success response:', result); // Add this log
+
+        if (user) {
+          updateUser({ ...user, profilePicture: result.profilePictureUrl });
           toast.success('Imagen de perfil actualizada correctamente');
         } else {
-          throw new Error('Failed to update profile picture');
+          throw new Error('No se pudo actualizar la información del usuario');
         }
       } catch (error) {
         console.error('Error updating profile picture:', error);
-        toast.error('Error al actualizar la imagen de perfil. Por favor, intenta de nuevo.');
+        toast.error(`Error al actualizar la imagen de perfil: ${error instanceof Error ? error.message : 'Error desconocido'}`);
       }
     }
   };
@@ -169,7 +189,7 @@ const Navbar: React.FC = () => {
                         ))}
                       </div>
                     </Transition>
-                    </>
+                  </>
                 ) : (
                   <Link href={link.href} className="text-gray-700 transition-colors duration-200 hover:text-blue-600">
                     {link.label}
@@ -179,7 +199,7 @@ const Navbar: React.FC = () => {
             ))}
           </div>
           <div className="flex items-center space-x-4">
-            {isLoggedIn ? (
+            {isLoggedIn && user ? (
               <>
                 {isAdmin && (
                   <Link href="/admin-dashboard" className="text-blue-600 hover:text-blue-800">
@@ -191,8 +211,8 @@ const Navbar: React.FC = () => {
                     onClick={() => toggleDropdown('profile')}
                     className="flex items-center space-x-2 text-gray-700 hover:text-blue-600"
                   >
-                    <Image src={profilePicture} alt="Profile" width={32} height={32} className="rounded-full" />
-                    <span>{userName}</span>
+                    <Image src={user.profilePicture || '/default-profile.png'} alt="Profile" width={32} height={32} className="rounded-full" />
+                    <span>{user.name}</span>
                   </button>
                   <Transition
                     show={dropdownOpen === 'profile'}
@@ -208,7 +228,7 @@ const Navbar: React.FC = () => {
                         Cambiar Foto
                         <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
                       </label>
-                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                      <Link href="/Profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
                         Editar Perfil
                       </Link>
                       <button onClick={handleLogout} className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-blue-50">
@@ -280,70 +300,70 @@ const Navbar: React.FC = () => {
                               >
                                 {item.label}
                               </a>
-                            ) : (
-                              <Link 
-                                key={itemIndex} 
-                                href={item.href} 
-                                className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
-                              >
-                                {item.label}
-                              </Link>
-                            )
-                          ))}
-                        </div>
-                      </Transition>
-                    </>
-                  ) : (
-                    <Link href={link.href} className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
-                      {link.label}
-                    </Link>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="pt-4 pb-3 border-t border-pink-200">
-              {isLoggedIn ? (
-                <>
-                  {isAdmin && (
-                    <Link href="/dashboard" className="block px-3 py-2 text-base font-medium text-blue-600 rounded-md hover:text-blue-800 hover:bg-gray-50">
-                      Dashboard
-                    </Link>
-                  )}
-                  <div className="flex items-center px-3 py-2">
-                    <div className="flex-shrink-0">
-                      <Image src={profilePicture} alt="Profile" width={32} height={32} className="rounded-full" />
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-base font-medium text-gray-800">{userName}</div>
-                    </div>
+                              ) : (
+                                <Link 
+                                  key={itemIndex} 
+                                  href={item.href} 
+                                  className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
+                                >
+                                  {item.label}
+                                </Link>
+                              )
+                            ))}
+                          </div>
+                        </Transition>
+                      </>
+                    ) : (
+                      <Link href={link.href} className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
+                        {link.label}
+                      </Link>
+                    )}
                   </div>
-                  <div className="mt-3 space-y-1">
-                    <label className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50 cursor-pointer">
-                      Cambiar Foto
-                      <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
-                    </label>
-                    <Link href="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
-                      Editar Perfil
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-3 py-2 text-base font-medium text-left text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
-                    >
-                      Cerrar Sesión
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <Link href="/login" className="block px-3 py-2 text-base font-medium rounded-md text-rose-400 hover:text-blue-600 hover:bg-gray-50">
-                  Iniciar sesión
-                </Link>
-              )}
+                ))}
+              </div>
+              <div className="pt-4 pb-3 border-t border-pink-200">
+                {isLoggedIn && user ? (
+                  <>
+                    {isAdmin && (
+                      <Link href="/dashboard" className="block px-3 py-2 text-base font-medium text-blue-600 rounded-md hover:text-blue-800 hover:bg-gray-50">
+                        Dashboard
+                      </Link>
+                    )}
+                    <div className="flex items-center px-3 py-2">
+                      <div className="flex-shrink-0">
+                        <Image src={user.profilePicture || '/default-profile.png'} alt="Profile" width={32} height={32} className="rounded-full" />
+                      </div>
+                      <div className="ml-3">
+                        <div className="text-base font-medium text-gray-800">{user.name}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-1">
+                      <label className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50 cursor-pointer">
+                        Cambiar Foto
+                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
+                      </label>
+                      <Link href="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
+                        Editar Perfil
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-3 py-2 text-base font-medium text-left text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
+                      >
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <Link href="/login" className="block px-3 py-2 text-base font-medium rounded-md text-rose-400 hover:text-blue-600 hover:bg-gray-50">
+                    Iniciar sesión
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
-        </Transition>
-      </nav>
-    </header>
-  );
-};
-
-export default Navbar;
+          </Transition>
+        </nav>
+      </header>
+    );
+  };
+  
+  export default Navbar;

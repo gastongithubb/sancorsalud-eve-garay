@@ -1,45 +1,52 @@
-// app/api/update-profile-picture/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import { updateAuthUser } from '@/utils/database';
+import { findUserByToken, updateUserProfilePicture } from '@/utils/users';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
-  if (!authHeader) {
-    return NextResponse.json({ message: 'No authorization token provided' }, { status: 401 });
+  console.log('Auth header:', authHeader); // Add this log
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ message: 'No se proporcionó el token de autorización' }, { status: 401 });
   }
 
   const token = authHeader.split(' ')[1];
+  console.log('Extracted token:', token); // Add this log
   
   try {
-    const decoded = await verifyToken(token);
+    const user = findUserByToken(token);
+    console.log('User found:', user ? 'Yes' : 'No'); // Add this log
+
+    if (!user) {
+      return NextResponse.json({ message: 'Token inválido o usuario no encontrado' }, { status: 401 });
+    }
+
     const data = await request.formData();
     const file: File | null = data.get('profilePicture') as unknown as File;
 
     if (!file) {
-      return NextResponse.json({ message: 'No file uploaded' }, { status: 400 });
+      return NextResponse.json({ message: 'No se subió ningún archivo' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const fileName = `${decoded.userId}-${Date.now()}${file.name.slice(file.name.lastIndexOf('.'))}`;
+    const fileName = `${user.username}-${Date.now()}${file.name.slice(file.name.lastIndexOf('.'))}`;
     const path = join(process.cwd(), 'public', 'uploads', fileName);
     await writeFile(path, buffer);
 
-    const newProfilePicture = `/uploads/${fileName}`;
+    const profilePictureUrl = `/uploads/${fileName}`;
 
-    await updateAuthUser(decoded.userId, { profilePicture: newProfilePicture });
+    const updatedUser = await updateUserProfilePicture(user.username, profilePictureUrl);
 
     return NextResponse.json({
-      message: 'Profile picture updated successfully',
-      profilePictureUrl: newProfilePicture
+      message: 'Foto de perfil actualizada correctamente',
+      profilePictureUrl,
+      user: updatedUser
     });
   } catch (error) {
-    console.error('Error updating profile picture:', error);
-    return NextResponse.json({ message: 'Invalid token or database error' }, { status: 401 });
+    console.error('Error al actualizar la foto de perfil:', error);
+    return NextResponse.json({ message: `Error al actualizar la foto de perfil: ${error instanceof Error ? error.message : 'Error desconocido'}` }, { status: 500 });
   }
 }
