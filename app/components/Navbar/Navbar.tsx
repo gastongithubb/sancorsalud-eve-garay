@@ -224,13 +224,13 @@ const Navbar: React.FC = () => {
                     leaveTo="opacity-0 scale-95"
                   >
                     <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg">
-                      <label className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-blue-50">
+                      {/* <label className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-blue-50">
                         Cambiar Foto
                         <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
                       </label>
                       <Link href="/Profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
                         Editar Perfil
-                      </Link>
+                      </Link> */}
                       <button onClick={handleLogout} className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-blue-50">
                         Cerrar Sesión
                       </button>
