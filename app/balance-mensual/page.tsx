@@ -1,5 +1,5 @@
 import React from 'react';
-import BalanceMensual from '@/app/components/Admin-Dashboard/mensual';
+import BalanceMensual from '@/app/components/balanceMensual/Balance-Mensual';
 
 const ForoPage: React.FC = () => {
   return (

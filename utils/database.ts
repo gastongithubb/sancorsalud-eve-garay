@@ -83,6 +83,16 @@ export const personnel = sqliteTable('personnel', {
   month: text('month').notNull()
 });
 
+export const nps_diario = sqliteTable('nps_diario', {
+  id: integer('id').primaryKey(),
+  employeeName: text('employee_name').notNull(),
+  date: text('date').notNull(),
+  Q: integer('Q').notNull(),
+  NPS: integer('NPS').notNull(),
+  SAT: real('SAT').notNull(),
+  RD: real('RD').notNull(),
+});
+
 export const trimetralMetrics = sqliteTable('trimestral_metrics', {
   id: integer('id').primaryKey(),
   employeeName: text('employee_name').notNull(),
@@ -176,6 +186,8 @@ export type BreakScheduleSelect = typeof breakSchedules.$inferSelect;
 export type BreakScheduleInsert = typeof breakSchedules.$inferInsert;
 export type NewsSelect = typeof news.$inferSelect;
 export type NewsInsert = typeof news.$inferInsert;
+export type NPSDiarioSelect = typeof nps_diario.$inferSelect;
+export type NPSDiarioInsert = typeof nps_diario.$inferInsert;
 export type NPSTrimestralSelect = typeof npsTrimestral.$inferSelect;
 export type NPSTrimestralInsert = typeof npsTrimestral.$inferInsert;
 export type UploadedFileSelect = typeof uploadedFiles.$inferSelect;
@@ -245,6 +257,20 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('Personnel table verified/created');
+
+    // Create nps_diario table
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS nps_diario (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_name TEXT NOT NULL,
+        date TEXT NOT NULL,
+        Q INTEGER NOT NULL,
+        NPS INTEGER NOT NULL,
+        SAT REAL NOT NULL,
+        RD REAL NOT NULL
+      )
+    `);
+    console.log('NPS Diario table verified/created');
 
     // Create break_schedules table
     await client.execute(`
@@ -1018,6 +1044,36 @@ export async function updateTrimestralMetricById(id: number, metric: Partial<Tri
   } catch (error) {
     console.error('Error updating trimestral metric by id:', error);
     throw new Error(`Failed to update trimestral metric by id: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function clearNPSDiario(): Promise<void> {
+  const db = getDB();
+  try {
+    await db.delete(nps_diario).run();
+  } catch (error) {
+    console.error('Error clearing NPS diario:', error);
+    throw new Error(`Failed to clear NPS diario: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function insertNPSDiario(metric: NPSDiarioInsert): Promise<void> {
+  const db = getDB();
+  try {
+    await db.insert(nps_diario).values(metric).run();
+  } catch (error) {
+    console.error('Error inserting NPS diario:', error);
+    throw new Error(`Failed to insert NPS diario: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function getNPSDiario(): Promise<NPSDiarioSelect[]> {
+  const db = getDB();
+  try {
+    return await db.select().from(nps_diario).all();
+  } catch (error) {
+    console.error('Error fetching NPS diario:', error);
+    throw new Error(`Failed to fetch NPS diario: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
