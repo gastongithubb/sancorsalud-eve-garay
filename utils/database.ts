@@ -1,6 +1,6 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { gte, lte, sql } from 'drizzle-orm';
+import { gte, lte, sql, like, or } from 'drizzle-orm';
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { eq, and, desc } from 'drizzle-orm';
 import { config } from './config';
@@ -97,24 +97,24 @@ export const employeeMetrics = sqliteTable('employee_metrics', {
   id: integer('id').primaryKey(),
   nombre: text('nombre').notNull(),
   Atendidas: integer('Atendidas').notNull(),
-  'Tiempo Atencion': integer('Tiempo Atencion').notNull(),
-  'Prom. T. Atención (min)': real('Prom. T. Atención (min)'),
-  'Prom. T Ringing (seg)': real('Prom. T Ringing (seg)'),
-  'Q de Encuestas': integer('Q de Encuestas'),
+  TiempoAtencion: integer('TiempoAtencion').notNull(),
+  PromTAtencionMin: real('PromTAtencionMin'),
+  PromTRingingSeg: real('PromTRingingSeg'),
+  QdeEncuestas: integer('QdeEncuestas'),
   NPS: integer('NPS').notNull(),
   SAT: real('SAT').notNull(),
   RD: real('RD').notNull(),
-  'Días Logueado': integer('Días Logueado').notNull(),
-  'Prom. Logueo': text('Prom. Logueo').notNull(),
-  '% de Ready': real('% de Ready').notNull(),
-  '% de ACD': real('% de ACD').notNull(),
-  '% de No Disp. Total': real('% de No Disp. Total').notNull(),
-  '% No Disp. No Productivo': real('% No Disp. No Productivo').notNull(),
-  '% No Disp. Productivo': real('% No Disp. Productivo').notNull(),
-  'Promedio Calidad': real('Promedio Calidad').notNull(),
-  'Ev. Actitudinal': text('Ev. Actitudinal'),
-  'Prom. Llam. X hora en función de Tiempo de habla y No disponible': real('Prom. Llam. X hora en función de Tiempo de habla y No disponible').notNull(),
-  'Priorización': text('Priorización').notNull()
+  DiasLogueado: integer('DiasLogueado').notNull(),
+  PromLogueo: text('PromLogueo').notNull(),
+  PorcentajeReady: real('PorcentajeReady').notNull(),
+  PorcentajeACD: real('PorcentajeACD').notNull(),
+  PorcentajeNoDispTotal: real('PorcentajeNoDispTotal').notNull(),
+  PorcentajeNoDispNoProductivo: real('PorcentajeNoDispNoProductivo').notNull(),
+  PorcentajeNoDispProductivo: real('PorcentajeNoDispProductivo').notNull(),
+  PromedioCalidad: real('PromedioCalidad').notNull(),
+  EvActitudinal: text('EvActitudinal'),
+  PromLlamXHora: real('PromLlamXHora').notNull(),
+  Priorizacion: text('Priorizacion').notNull()
 });
 
 export const authUsers = sqliteTable('auth_users', {
@@ -185,6 +185,29 @@ export type SyncLogInsert = typeof syncLogs.$inferInsert;
 export type AuthUser = typeof authUsers.$inferSelect;
 export type AuthUserInsert = typeof authUsers.$inferInsert;
 export type EmployeeMetricInsert = typeof employeeMetrics.$inferInsert;
+export type EmployeeMetrics = {
+  id?: number;
+  nombre: string;
+  Atendidas: number;
+  TiempoAtencion: number;
+  PromTAtencionMin?: number | null | undefined;
+  PromTRingingSeg?: number | null | undefined;
+  QdeEncuestas?: number | null | undefined;
+  NPS: number;
+  SAT: number;
+  RD: number;
+  DiasLogueado: number;
+  PromLogueo: string;
+  PorcentajeReady: number;
+  PorcentajeACD: number;
+  PorcentajeNoDispTotal: number;
+  PorcentajeNoDispNoProductivo: number;
+  PorcentajeNoDispProductivo: number;
+  PromedioCalidad: number;
+  EvActitudinal?: string | null | undefined;  // Allow null
+  PromLlamXHora: number;
+  Priorizacion: string;
+};
 export type EmployeeMetricSelect = typeof employeeMetrics.$inferSelect;
 export type TrimestralMetricSelect = typeof trimetralMetrics.$inferSelect;
 export type TrimestralMetricInsert = typeof trimetralMetrics.$inferInsert;
@@ -309,39 +332,77 @@ export async function ensureTablesExist() {
   }
 }
 
-export async function createEmployeeMetricsTable() {
+export async function createOrUpdateEmployeeMetricsTable() {
+  const client = getClient();
+  try {
+    // Verificar si la tabla existe
+    const tableExists = await client.execute(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='employee_metrics';
+    `);
+
+    if (tableExists.rows.length === 0) {
+      // Si la tabla no existe, créala
+      await client.execute(`
+        CREATE TABLE employee_metrics (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          Atendidas INTEGER NOT NULL,
+          TiempoAtencion INTEGER NOT NULL,
+          PromTAtencionMin REAL,
+          PromTRingingSeg REAL,
+          QdeEncuestas INTEGER,
+          NPS INTEGER NOT NULL,
+          SAT REAL NOT NULL,
+          RD REAL NOT NULL,
+          DiasLogueado INTEGER NOT NULL,
+          PromLogueo TEXT NOT NULL,
+          PorcentajeReady REAL NOT NULL,
+          PorcentajeACD REAL NOT NULL,
+          PorcentajeNoDispTotal REAL NOT NULL,
+          PorcentajeNoDispNoProductivo REAL NOT NULL,
+          PorcentajeNoDispProductivo REAL NOT NULL,
+          PromedioCalidad REAL NOT NULL,
+          EvActitudinal TEXT,
+          PromLlamXHora REAL NOT NULL,
+          Priorizacion TEXT NOT NULL
+        )
+      `);
+      console.log('Employee metrics table created successfully');
+    } else {
+      console.log('Employee metrics table already exists');
+    }
+  } catch (error) {
+    console.error('Error creating or updating employee metrics table:', error);
+    throw error;
+  }
+}
+
+export async function createTrimestralMetricsTable() {
   const client = getClient();
   try {
     await client.execute(`
-      CREATE TABLE IF NOT EXISTS employee_metrics (
+      CREATE TABLE IF NOT EXISTS trimestral_metrics (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        Atendidas INTEGER NOT NULL,
-        TiempoAtencion INTEGER NOT NULL,
-        PromTAtencionMin REAL,
-        PromTRingingSeg REAL,
-        QdeEncuestas INTEGER,
+        employee_name TEXT NOT NULL,
+        month TEXT NOT NULL,
+        Q INTEGER NOT NULL,
         NPS INTEGER NOT NULL,
         SAT REAL NOT NULL,
-        RD REAL NOT NULL,
-        DiasLogueado INTEGER NOT NULL,
-        PromLogueo TEXT NOT NULL,
-        PorcentajeReady REAL NOT NULL,
-        PorcentajeACD REAL NOT NULL,
-        PorcentajeNoDispTotal REAL NOT NULL,
-        PorcentajeNoDispNoProductivo REAL NOT NULL,
-        PorcentajeNoDispProductivo REAL NOT NULL,
-        PromedioCalidad REAL NOT NULL,
-        EvActitudinal TEXT,
-        PromLlamXHora REAL NOT NULL,
-        Priorizacion TEXT NOT NULL
+        RD REAL NOT NULL
       )
     `);
-    console.log('Employee metrics table created successfully');
+    console.log('Trimestral metrics table created successfully');
   } catch (error) {
-    console.error('Error creating employee metrics table:', error);
+    console.error('Error creating trimestral metrics table:', error);
     throw error;
   }
+}
+
+export async function initializeAllTables() {
+  await ensureTablesExist();
+  await createOrUpdateEmployeeMetricsTable();
+  await createTrimestralMetricsTable();
+  console.log('All tables initialized successfully');
 }
 
 // Database operations
@@ -743,17 +804,37 @@ export async function getEmployeeMetrics(nombre?: string): Promise<EmployeeMetri
   }
 }
 
-export async function insertEmployeeMetric(metric: EmployeeMetricInsert): Promise<void> {
+export async function insertEmployeeMetric(metric: EmployeeMetrics): Promise<void> {
   const db = getDB();
   try {
-    await db.insert(employeeMetrics).values(metric).run();
+    await db.insert(employeeMetrics).values({
+      nombre: metric.nombre,
+      Atendidas: metric.Atendidas,
+      TiempoAtencion: metric.TiempoAtencion,
+      PromTAtencionMin: metric.PromTAtencionMin,
+      PromTRingingSeg: metric.PromTRingingSeg,
+      QdeEncuestas: metric.QdeEncuestas,
+      NPS: metric.NPS,
+      SAT: metric.SAT,
+      RD: metric.RD,
+      DiasLogueado: metric.DiasLogueado,
+      PromLogueo: metric.PromLogueo,
+      PorcentajeReady: metric.PorcentajeReady,
+      PorcentajeACD: metric.PorcentajeACD,
+      PorcentajeNoDispTotal: metric.PorcentajeNoDispTotal,
+      PorcentajeNoDispNoProductivo: metric.PorcentajeNoDispNoProductivo,
+      PorcentajeNoDispProductivo: metric.PorcentajeNoDispProductivo,
+      PromedioCalidad: metric.PromedioCalidad,
+      EvActitudinal: metric.EvActitudinal,
+      PromLlamXHora: metric.PromLlamXHora,
+      Priorizacion: metric.Priorizacion
+    }).run();
     console.log('Employee metric inserted successfully');
   } catch (error) {
     console.error('Error inserting employee metric:', error);
     throw new Error(`Failed to insert employee metric: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
-
 
 export async function updateEmployeeMetric(metric: EmployeeMetricSelect): Promise<void> {
   const db = getDB();
@@ -776,27 +857,6 @@ export async function deleteEmployeeMetric(id: number): Promise<void> {
   } catch (error: unknown) {
     console.error('Error deleting employee metric:', error);
     throw new Error(`Failed to delete employee metric: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-export async function createTrimestralMetricsTable() {
-  const client = getClient();
-  try {
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS trimestral_metrics (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        employee_name TEXT NOT NULL,
-        month TEXT NOT NULL,
-        Q INTEGER NOT NULL,
-        NPS INTEGER NOT NULL,
-        SAT REAL NOT NULL,
-        RD REAL NOT NULL
-      )
-    `);
-    console.log('Trimestral metrics table created successfully');
-  } catch (error) {
-    console.error('Error creating trimestral metrics table:', error);
-    throw error;
   }
 }
 
@@ -848,9 +908,6 @@ export async function deleteTrimestralMetric(id: number): Promise<void> {
   }
 }
 
-// Utility function to sanitize input for employee metrics
-
-// Function to get the total count of employee metrics
 export async function getEmployeeMetricsCount(): Promise<number> {
   const db = getDB();
   try {
@@ -862,7 +919,6 @@ export async function getEmployeeMetricsCount(): Promise<number> {
   }
 }
 
-// Function to get paginated employee metrics
 export async function getPaginatedEmployeeMetrics(page: number, pageSize: number): Promise<EmployeeMetricSelect[]> {
   const db = getDB();
   try {
@@ -878,16 +934,15 @@ export async function getPaginatedEmployeeMetrics(page: number, pageSize: number
   }
 }
 
-// Function to get employee metrics for a specific date range
-export async function getEmployeeMetricsByDateRange(startDate: string, endDate: string): Promise<EmployeeMetricSelect[]> {
+export async function getEmployeeMetricsByDateRange(startDate: number, endDate: number): Promise<EmployeeMetricSelect[]> {
   const db = getDB();
   try {
     return await db.select()
       .from(employeeMetrics)
       .where(
         and(
-          gte(employeeMetrics['Días Logueado'], parseInt(startDate)),
-          lte(employeeMetrics['Días Logueado'], parseInt(endDate))
+          gte(employeeMetrics.DiasLogueado, startDate),
+          lte(employeeMetrics.DiasLogueado, endDate)
         )
       )
       .all();
@@ -897,31 +952,83 @@ export async function getEmployeeMetricsByDateRange(startDate: string, endDate: 
   }
 }
 
-// Function to get average metrics for all employees
-export async function getAverageEmployeeMetrics(): Promise<Partial<EmployeeMetricSelect>> {
+export async function getEmployeeMetricsStats(): Promise<{
+  totalEmployees: number,
+  averageNPS: number,
+  averageSAT: number,
+  averageRD: number,
+  totalAtendidas: number
+}> {
   const db = getDB();
   try {
     const result = await db.select({
-      Atendidas: sql<number>`AVG(${employeeMetrics.Atendidas})`.as('avgAtendidas'),
-      NPS: sql<number>`AVG(${employeeMetrics.NPS})`.as('avgNPS'),
-      SAT: sql<number>`AVG(${employeeMetrics.SAT})`.as('avgSAT'),
-      RD: sql<number>`AVG(${employeeMetrics.RD})`.as('avgRD'),
-      '% de Ready': sql<number>`AVG(${employeeMetrics['% de Ready']})`.as('avgPorcentajeReady'),
-      '% de ACD': sql<number>`AVG(${employeeMetrics['% de ACD']})`.as('avgPorcentajeACD'),
-      'Promedio Calidad': sql<number>`AVG(${employeeMetrics['Promedio Calidad']})`.as('avgPromedioCalidad'),
+      totalEmployees: sql<number>`COUNT(DISTINCT ${employeeMetrics.nombre})`,
+      averageNPS: sql<number>`AVG(${employeeMetrics.NPS})`,
+      averageSAT: sql<number>`AVG(${employeeMetrics.SAT})`,
+      averageRD: sql<number>`AVG(${employeeMetrics.RD})`,
+      totalAtendidas: sql<number>`SUM(${employeeMetrics.Atendidas})`
     }).from(employeeMetrics).get();
 
-    return result || {};
+    return result || {
+      totalEmployees: 0,
+      averageNPS: 0,
+      averageSAT: 0,
+      averageRD: 0,
+      totalAtendidas: 0
+    };
   } catch (error) {
-    console.error('Error getting average employee metrics:', error);
-    throw new Error(`Failed to get average employee metrics: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('Error getting employee metrics stats:', error);
+    throw new Error(`Failed to get employee metrics stats: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
-// Export all the necessary functions and types
+export async function searchPersonnel(searchTerm: string): Promise<PersonnelSelect[]> {
+  const db = getDB();
+  try {
+    return await db.select()
+      .from(personnel)
+      .where(
+        or(
+          like(personnel.firstName, `%${searchTerm}%`),
+          like(personnel.lastName, `%${searchTerm}%`),
+          like(personnel.dni, `%${searchTerm}%`)
+        )
+      )
+      .all();
+  } catch (error) {
+    console.error('Error searching personnel:', error);
+    throw new Error(`Failed to search personnel: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function getTrimestralMetricById(id: number): Promise<TrimestralMetricSelect | undefined> {
+  const db = getDB();
+  try {
+    return await db.select().from(trimetralMetrics).where(eq(trimetralMetrics.id, id)).get();
+  } catch (error) {
+    console.error('Error fetching trimestral metric by id:', error);
+    throw new Error(`Failed to fetch trimestral metric by id: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function updateTrimestralMetricById(id: number, metric: Partial<TrimestralMetricInsert>): Promise<void> {
+  const db = getDB();
+  try {
+    await db.update(trimetralMetrics).set(metric).where(eq(trimetralMetrics.id, id)).run();
+  } catch (error) {
+    console.error('Error updating trimestral metric by id:', error);
+    throw new Error(`Failed to update trimestral metric by id: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Export all necessary functions and types
 export {
   eq,
   and,
   desc,
   sql,
+  like,
+  or,
+  gte,
+  lte
 };

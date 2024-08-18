@@ -55,8 +55,27 @@ const navLinks = [
       },
     ]
   },
-  { href: '/#casos', label: 'Casos derivar / cerrar' },
   { href: '/foro', label: 'Pizarra' },
+  { 
+    label: 'Mas',
+    dropdown: [
+      {
+        href: 'https://docs.google.com/spreadsheets/d/1fyjXUOIYC1JqVFNvNyfTKs5uncUgqYFWPXpBc-sbg54/edit?gid=0#gid=0',
+        label: 'Requisitos de Reintegros',
+        target: '_blank'
+      },
+      {
+        href: 'https://docs.google.com/spreadsheets/d/1gOo19k_g8nB_WFcPkOunkL9J-CtUBNBdKO2AUQz5hIo/edit?gid=0#gid=0',
+        label: 'falta de prestadores en zona por practicas',
+        target: '_blank'
+      },
+      {
+        href: '/speech',
+        label: 'Speech de corte',
+      }
+    ]
+},
+    
 ];
 
 const Navbar: React.FC = () => {
@@ -338,13 +357,13 @@ const Navbar: React.FC = () => {
                       </div>
                     </div>
                     <div className="mt-3 space-y-1">
-                      <label className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50 cursor-pointer">
+                      {/* <label className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50 cursor-pointer">
                         Cambiar Foto
                         <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
                       </label>
                       <Link href="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
                         Editar Perfil
-                      </Link>
+                      </Link> */}
                       <button
                         onClick={handleLogout}
                         className="block w-full px-3 py-2 text-base font-medium text-left text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"

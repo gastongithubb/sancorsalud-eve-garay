@@ -47,17 +47,17 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   )
 }
 
-function DebugInfo() {
-  const { isLoggedIn, isLoading } = useAuth()
-  const pathname = usePathname()
+// function DebugInfo() {
+//   const { isLoggedIn, isLoading } = useAuth()
+//   const pathname = usePathname()
 
-  return (
-    <div className="fixed bottom-0 left-0 bg-black text-white p-2 text-xs">
-      isLoggedIn: {String(isLoggedIn)}, isLoading: {String(isLoading)}, 
-      pathname: {pathname}
-    </div>
-  )
-}
+//   return (
+//     <div className="fixed bottom-0 left-0 bg-black text-white p-2 text-xs">
+//       isLoggedIn: {String(isLoggedIn)}, isLoading: {String(isLoading)}, 
+//       pathname: {pathname}
+//     </div>
+//   )
+// }
 
 export default function RootLayout({
   children,
@@ -76,7 +76,7 @@ export default function RootLayout({
             <AuthWrapper>
               {children}
             </AuthWrapper>
-            <DebugInfo />
+            {/* <DebugInfo /> */}
           </AuthProvider>
         </Providers>
       </body>

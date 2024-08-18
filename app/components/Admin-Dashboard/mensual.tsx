@@ -1,17 +1,18 @@
+// File: CallCenterDashboard.tsx
 'use client'
 import React, { useState, useEffect } from 'react';
-import { parseCSV, EmployeeMetrics } from '@/lib/excelParser';
+import { parseCSV } from '@/lib/excelParser';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table";
-import { insertEmployeeMetric, getEmployeeMetrics, createEmployeeMetricsTable } from '@/utils/database';
+import { insertEmployeeMetric, EmployeeMetrics, createOrUpdateEmployeeMetricsTable } from '@/utils/database';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const MetricCard: React.FC<{ title: string; value: number | string }> = ({ title, value }) => (
-  <Card>
+  <Card className="h-full">
     <CardHeader>
-      <CardTitle>{title}</CardTitle>
+      <CardTitle className="text-sm">{title}</CardTitle>
     </CardHeader>
     <CardContent>
       <p className="text-2xl font-bold">{value}</p>
@@ -21,9 +22,9 @@ const MetricCard: React.FC<{ title: string; value: number | string }> = ({ title
 
 const EmployeeCard: React.FC<{ employee: EmployeeMetrics }> = ({ employee }) => {
   const timeDistribution = [
-    { name: 'Ready', value: employee['% de Ready'] },
-    { name: 'ACD', value: employee['% de ACD'] },
-    { name: 'No Disp. Total', value: employee['% de No Disp. Total'] },
+    { name: 'Ready', value: employee.PorcentajeReady },
+    { name: 'ACD', value: employee.PorcentajeACD },
+    { name: 'No Disp. Total', value: employee.PorcentajeNoDispTotal },
   ];
 
   const performanceData = [
@@ -79,8 +80,8 @@ const EmployeeCard: React.FC<{ employee: EmployeeMetrics }> = ({ employee }) => 
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="Prom. T. Atención (min)" fill="#8884d8" />
-                <Bar dataKey="Prom. T Ringing (seg)" fill="#82ca9d" />
+                <Bar dataKey="PromTAtencionMin" fill="#8884d8" />
+                <Bar dataKey="PromTRingingSeg" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -103,7 +104,7 @@ const EmployeeCard: React.FC<{ employee: EmployeeMetrics }> = ({ employee }) => 
   );
 };
 
-export default function CallCenterDashboard() {
+const CallCenterDashboard: React.FC = () => {
   const [employees, setEmployees] = useState<EmployeeMetrics[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -111,7 +112,7 @@ export default function CallCenterDashboard() {
   useEffect(() => {
     const initializeDatabase = async () => {
       try {
-        await createEmployeeMetricsTable();
+        await createOrUpdateEmployeeMetricsTable();
         console.log('Employee metrics table initialized');
       } catch (error) {
         console.error('Error initializing employee metrics table:', error);
@@ -129,7 +130,29 @@ export default function CallCenterDashboard() {
         const content = e.target?.result;
         if (typeof content === 'string') {
           const parsedData = parseCSV(content);
-          setEmployees(parsedData);
+          const mappedData: EmployeeMetrics[] = parsedData.map(employee => ({
+            nombre: employee.nombre,
+            Atendidas: Number(employee.Atendidas),
+            TiempoAtencion: Number(employee.TiempoAtencion),
+            PromTAtencionMin: Number(employee.PromTAtencionMin),
+            PromTRingingSeg: Number(employee.PromTRingingSeg),
+            QdeEncuestas: Number(employee.QdeEncuestas),
+            NPS: Number(employee.NPS),
+            SAT: Number(employee.SAT),
+            RD: Number(employee.RD),
+            DiasLogueado: Number(employee.DiasLogueado),
+            PromLogueo: employee.PromLogueo,
+            PorcentajeReady: Number(employee.PorcentajeReady),
+            PorcentajeACD: Number(employee.PorcentajeACD),
+            PorcentajeNoDispTotal: Number(employee.PorcentajeNoDispTotal),
+            PorcentajeNoDispNoProductivo: Number(employee.PorcentajeNoDispNoProductivo),
+            PorcentajeNoDispProductivo: Number(employee.PorcentajeNoDispProductivo),
+            PromedioCalidad: Number(employee.PromedioCalidad),
+            EvActitudinal: employee.EvActitudinal,
+            PromLlamXHora: Number(employee.PromLlamXHora),
+            Priorizacion: employee.Priorizacion
+          }));
+          setEmployees(mappedData);
         }
       };
       reader.readAsText(file);
@@ -142,28 +165,29 @@ export default function CallCenterDashboard() {
     setIsSaving(true);
     try {
       for (const employee of employees) {
-        await insertEmployeeMetric({
+        const mappedEmployee: EmployeeMetrics = {
           nombre: employee.nombre,
           Atendidas: employee.Atendidas,
-          'Tiempo Atencion': employee['Tiempo Atencion'],
-          'Prom. T. Atención (min)': employee['Prom. T. Atención (min)'],
-          'Prom. T Ringing (seg)': employee['Prom. T Ringing (seg)'],
-          'Q de Encuestas': employee['Q de Encuestas'],
+          TiempoAtencion: employee.TiempoAtencion,
+          PromTAtencionMin: employee.PromTAtencionMin,
+          PromTRingingSeg: employee.PromTRingingSeg,
+          QdeEncuestas: employee.QdeEncuestas,
           NPS: employee.NPS,
           SAT: employee.SAT,
           RD: employee.RD,
-          'Días Logueado': employee['Días Logueado'],
-          'Prom. Logueo': employee['Prom. Logueo'],
-          '% de Ready': employee['% de Ready'],
-          '% de ACD': employee['% de ACD'],
-          '% de No Disp. Total': employee['% de No Disp. Total'],
-          '% No Disp. No Productivo': employee['% No Disp. No Productivo'],
-          '% No Disp. Productivo': employee['% No Disp. Productivo'],
-          'Promedio Calidad': employee['Promedio Calidad'],
-          'Ev. Actitudinal': employee['Ev. Actitudinal'],
-          'Prom. Llam. X hora en función de Tiempo de habla y No disponible': employee['Prom. Llam. X hora en función de Tiempo de habla y No disponible'],
-          'Priorización': employee['Priorización']
-        });
+          DiasLogueado: employee.DiasLogueado,
+          PromLogueo: employee.PromLogueo,
+          PorcentajeReady: employee.PorcentajeReady,
+          PorcentajeACD: employee.PorcentajeACD,
+          PorcentajeNoDispTotal: employee.PorcentajeNoDispTotal,
+          PorcentajeNoDispNoProductivo: employee.PorcentajeNoDispNoProductivo,
+          PorcentajeNoDispProductivo: employee.PorcentajeNoDispProductivo,
+          PromedioCalidad: employee.PromedioCalidad,
+          EvActitudinal: employee.EvActitudinal,
+          PromLlamXHora: employee.PromLlamXHora,
+          Priorizacion: employee.Priorizacion
+        };
+        await insertEmployeeMetric(mappedEmployee);
       }
       alert('Data saved successfully!');
     } catch (error) {
@@ -178,9 +202,64 @@ export default function CallCenterDashboard() {
     employee.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const renderOverallMetrics = () => {
+    if (employees.length === 0) return null;
+
+    const averageNPS = employees.reduce((sum, employee) => sum + employee.NPS, 0) / employees.length;
+    const averageSAT = employees.reduce((sum, employee) => sum + employee.SAT, 0) / employees.length;
+    const averageRD = employees.reduce((sum, employee) => sum + employee.RD, 0) / employees.length;
+    const totalAtendidas = employees.reduce((sum, employee) => sum + employee.Atendidas, 0);
+    const averageCalidad = employees.reduce((sum, employee) => sum + employee.PromedioCalidad, 0) / employees.length;
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <MetricCard title="Promedio NPS" value={averageNPS.toFixed(2)} />
+        <MetricCard title="Promedio SAT" value={`${averageSAT.toFixed(2)}%`} />
+        <MetricCard title="Promedio RD" value={`${averageRD.toFixed(2)}%`} />
+        <MetricCard title="Total Atendidas" value={totalAtendidas} />
+        <MetricCard title="Promedio Calidad" value={averageCalidad.toFixed(2)} />
+      </div>
+    );
+  };
+
+  const renderMetricsTable = () => (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Atendidas</TableHead>
+            <TableHead>NPS</TableHead>
+            <TableHead>SAT</TableHead>
+            <TableHead>RD</TableHead>
+            <TableHead>Promedio Calidad</TableHead>
+            <TableHead>% de Ready</TableHead>
+            <TableHead>% de ACD</TableHead>
+            <TableHead>% de No Disp. Total</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredEmployees.map((employee, index) => (
+            <TableRow key={index}>
+              <TableCell>{employee.nombre}</TableCell>
+              <TableCell>{employee.Atendidas}</TableCell>
+              <TableCell>{employee.NPS}</TableCell>
+              <TableCell>{employee.SAT}%</TableCell>
+              <TableCell>{employee.RD}%</TableCell>
+              <TableCell>{employee.PromedioCalidad}</TableCell>
+              <TableCell>{employee.PorcentajeReady}%</TableCell>
+              <TableCell>{employee.PorcentajeACD}%</TableCell>
+              <TableCell>{employee.PorcentajeNoDispTotal}%</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
   return (
     <main className="container mx-auto p-4">
-      <h1 className="text-4xl font-bold mb-8">Métricas Mensuales</h1>
+      <h1 className="text-4xl font-bold mb-8">Métricas Mensuales del Call Center</h1>
       
       <div className="mb-8 flex justify-between items-center">
         <div>
@@ -199,13 +278,27 @@ export default function CallCenterDashboard() {
           />
         </div>
         <button
-  onClick={saveToDatabase}
-  disabled={isSaving || employees.length === 0}
-  className="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white font-bold disabled:bg-gray-400"
->
-  {isSaving ? 'Guardando...' : 'Guardar en Base de Datos'}
-</button>
+          onClick={saveToDatabase}
+          disabled={isSaving || employees.length === 0}
+          className="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white font-bold disabled:bg-gray-400"
+        >
+          {isSaving ? 'Guardando...' : 'Guardar en Base de Datos'}
+        </button>
       </div>
+
+      {employees.length > 0 && (
+        <>
+          {renderOverallMetrics()}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Resumen de Métricas por Empleado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderMetricsTable()}
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {filteredEmployees.length > 0 ? (
         filteredEmployees.map((employee, index) => (
@@ -219,4 +312,6 @@ export default function CallCenterDashboard() {
       )}
     </main>
   );
-}
+};
+
+export default CallCenterDashboard;
