@@ -41,6 +41,8 @@ const NOTE_COLORS: NoteColor[] = [
   { name: 'Púrpura', bgColor: 'bg-purple-700', textColor: 'text-white' },
 ];
 
+const DEFAULT_NOTE_COLOR: NoteColor = NOTE_COLORS[0];
+
 const STICKER_OPTIONS = [
   '😀', '🚀', '💡', '🎉', '🐱', '🌈', '🍕', '🎸',
   '🌺', '🦄', '🍦', '🎨', '📚', '🏆', '🎭', '🌙',
@@ -82,7 +84,14 @@ const OnlineWhiteboard = () => {
     const savedNotes = localStorage.getItem('whiteboardNotes');
     const savedStickers = localStorage.getItem('whiteboardStickers');
     
-    if (savedNotes) setNotes(JSON.parse(savedNotes));
+    if (savedNotes) {
+      const parsedNotes = JSON.parse(savedNotes);
+      const validatedNotes = parsedNotes.map((note: NoteType) => ({
+        ...note,
+        color: note.color || DEFAULT_NOTE_COLOR
+      }));
+      setNotes(validatedNotes);
+    }
     if (savedStickers) setStickers(JSON.parse(savedStickers));
   }, []);
 
@@ -100,7 +109,7 @@ const OnlineWhiteboard = () => {
       isPinned: false,
       width: 200,
       height: 200,
-      color: NOTE_COLORS[0],
+      color: DEFAULT_NOTE_COLOR,
     };
     setNotes([...notes, newNote]);
   };
@@ -262,7 +271,7 @@ const OnlineWhiteboard = () => {
           {notes.map((note) => (
             <div
               key={note.id}
-              className={`absolute p-2 ${note.color.bgColor} ${note.color.textColor} rounded shadow group ${note.isPinned ? 'cursor-default' : 'cursor-move'}`}
+              className={`absolute p-2 ${note.color?.bgColor || DEFAULT_NOTE_COLOR.bgColor} ${note.color?.textColor || DEFAULT_NOTE_COLOR.textColor} rounded shadow group ${note.isPinned ? 'cursor-default' : 'cursor-move'}`}
               style={{ left: `${note.x}%`, top: `${note.y}%`, width: `${note.width}px`, height: `${note.height}px` }}
               draggable={!note.isPinned}
               onDragStart={(e) => handleDragStart(e, note.id)}
@@ -270,7 +279,7 @@ const OnlineWhiteboard = () => {
               onDragEnd={handleDragEnd}
             >
               <textarea
-                className={`w-full h-full bg-transparent resize-none focus:outline-none ${note.color.textColor}`}
+                className={`w-full h-full bg-transparent resize-none focus:outline-none ${note.color?.textColor || DEFAULT_NOTE_COLOR.textColor}`}
                 value={note.text}
                 onChange={(e) => updateNote(note.id, e.target.value)}
               />
@@ -302,89 +311,89 @@ const OnlineWhiteboard = () => {
                 <div className="absolute top-6 left-0 bg-white p-2 rounded shadow-lg z-10">
                   {NOTE_COLORS.map((color) => (
                     <button
-                      key={color.name}
-                      className={`w-6 h-6 m-1 rounded-full ${color.bgColor}`}
-                      onClick={() => changeNoteColor(note.id, color)}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                    key={color.name}
+                    className={`w-6 h-6 m-1 rounded-full ${color.bgColor}`}
+                    onClick={() => changeNoteColor(note.id, color)}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
 
-          {/* Stickers y GIFs */}
-          {stickers.map((sticker) => (
-            <div
-              key={sticker.id}
-              className="absolute cursor-move group"
-              style={{ left: `${sticker.x}%`, top: `${sticker.y}%` }}
-              draggable
-              onDragStart={(e) => handleDragStart(e, sticker.id)}
-              onDrag={handleDrag}
-              onDragEnd={handleDragEnd}
+        {/* Stickers y GIFs */}
+        {stickers.map((sticker) => (
+          <div
+            key={sticker.id}
+            className="absolute cursor-move group"
+            style={{ left: `${sticker.x}%`, top: `${sticker.y}%` }}
+            draggable
+            onDragStart={(e) => handleDragStart(e, sticker.id)}
+            onDrag={handleDrag}
+            onDragEnd={handleDragEnd}
+          >
+            {sticker.isGif ? (
+              <img src={sticker.gifUrl} alt={sticker.content} className="w-24 h-24 object-cover" />
+            ) : (
+              <span className="text-4xl" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>{sticker.content}</span>
+            )}
+            <button
+              onClick={() => deleteSticker(sticker.id)}
+              className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              {sticker.isGif ? (
-                <img src={sticker.gifUrl} alt={sticker.content} className="w-24 h-24 object-cover" />
-              ) : (
-                <span className="text-4xl" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>{sticker.content}</span>
-              )}
-              <button
-                onClick={() => deleteSticker(sticker.id)}
-                className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X size={16} />
-              </button>
-            </div>
+              <X size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Selector de Stickers y GIFs */}
+    {showStickerPicker && (
+      <div className="absolute top-16 left-4 bg-white p-4 rounded shadow-lg max-w-md z-10">
+        <div className="grid grid-cols-6 gap-2 mb-4">
+          {STICKER_OPTIONS.map((sticker, index) => (
+            <button
+              key={index}
+              onClick={() => addSticker(sticker)}
+              className="text-2xl hover:bg-gray-200 rounded p-1"
+              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
+            >
+              {sticker}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center mb-2">
+          <input
+            type="text"
+            value={gifSearchTerm}
+            onChange={(e) => setGifSearchTerm(e.target.value)}
+            placeholder="Buscar GIF..."
+            className="border rounded p-1 mr-2 flex-grow"
+          />
+          <button
+            onClick={searchGif}
+            className="bg-blue-500 text-white p-2 rounded flex items-center"
+          >
+            <Search className="mr-1" /> Buscar
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {gifResults.map((gif) => (
+            <img
+              key={gif.id}
+              src={gif.images.fixed_height_small.url}
+              alt={gif.title}
+              className="w-full h-24 object-cover cursor-pointer"
+              onClick={() => addSticker(gif.title, true, gif.images.fixed_height.url)}
+            />
           ))}
         </div>
       </div>
-
-      {/* Selector de Stickers y GIFs */}
-      {showStickerPicker && (
-        <div className="absolute top-16 left-4 bg-white p-4 rounded shadow-lg max-w-md z-10">
-          <div className="grid grid-cols-6 gap-2 mb-4">
-            {STICKER_OPTIONS.map((sticker, index) => (
-              <button
-                key={index}
-                onClick={() => addSticker(sticker)}
-                className="text-2xl hover:bg-gray-200 rounded p-1"
-                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
-              >
-                {sticker}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center mb-2">
-            <input
-              type="text"
-              value={gifSearchTerm}
-              onChange={(e) => setGifSearchTerm(e.target.value)}
-              placeholder="Buscar GIF..."
-              className="border rounded p-1 mr-2 flex-grow"
-            />
-            <button
-              onClick={searchGif}
-              className="bg-blue-500 text-white p-2 rounded flex items-center"
-            >
-              <Search className="mr-1" /> Buscar
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {gifResults.map((gif) => (
-              <img
-                key={gif.id}
-                src={gif.images.fixed_height_small.url}
-                alt={gif.title}
-                className="w-full h-24 object-cover cursor-pointer"
-                onClick={() => addSticker(gif.title, true, gif.images.fixed_height.url)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    )}
+  </div>
+);
 };
 
 export default OnlineWhiteboard;
