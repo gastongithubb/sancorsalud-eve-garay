@@ -1047,15 +1047,7 @@ export async function updateTrimestralMetricById(id: number, metric: Partial<Tri
   }
 }
 
-export async function clearNPSDiario(): Promise<void> {
-  const db = getDB();
-  try {
-    await db.delete(nps_diario).run();
-  } catch (error) {
-    console.error('Error clearing NPS diario:', error);
-    throw new Error(`Failed to clear NPS diario: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+
 
 export async function insertNPSDiario(metric: NPSDiarioInsert): Promise<void> {
   const db = getDB();
@@ -1074,6 +1066,16 @@ export async function getNPSDiario(): Promise<NPSDiarioSelect[]> {
   } catch (error) {
     console.error('Error fetching NPS diario:', error);
     throw new Error(`Failed to fetch NPS diario: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function clearNPSDiario(): Promise<void> {
+  const db = getDB();
+  try {
+    await db.delete(nps_diario).run();
+  } catch (error) {
+    console.error('Error clearing NPS diario:', error);
+    throw new Error(`Failed to clear NPS diario: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

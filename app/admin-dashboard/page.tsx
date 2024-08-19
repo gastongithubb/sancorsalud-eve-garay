@@ -1,6 +1,6 @@
 // page.tsx
-import TeamDashboard from '../components/TeamDashboard';
+import AdminDashboard from '../components/Admin-Dashboard/SidebarDashboard';
 
 export default function TeamPage() {
-  return <TeamDashboard />;
+  return <AdminDashboard />;
 }

@@ -67,13 +67,13 @@ const teamData: TeamMember[] = [
     },
     {
         "title": "CX Agent",
-        "name": "Maria Laura Carrizo Tula",
+        "name": "Montenegro Yohana Vanessa Ruth",
         "description": "Sancor Salud - Konecta  ",
-        "contrato": "Contrato: 7 hs",
-        "email": "mail: maria.carrizo@sancor.konecta.ar",
-        "profile": "/team/tula.jpg",
+        "contrato": "Contrato: 6 hs",
+        "email": "mail: yohana.montenegro@sancor.konecta.ar",
+        "profile": "/team/none.webp",
         "link": "/",
-        "cumpleaños": "26 de Enero"
+        "cumpleaños": "???"
     },
     {
         "title": "CX Agent",
@@ -98,9 +98,9 @@ const teamData: TeamMember[] = [
     {
         "title": "CX Agent",
         "name": "Gaston Alvarez",
-        "description": "Sancor Salud -  mail: gaston.alvarez@sancor.konecta.ar",
+        "description": "Sancor Salud -  Konecta",
         "contrato": "Contrato: 5 hs",
-        "email": "mail: eve-garay@sancor.konecta.ar",
+        "email": "mail: gaston.alvarez@sancor.konecta.ar",
         "profile": "/team/gaston.jpeg",
         "link": "/",
         "cumpleaños": "29 de Diciembre"
@@ -217,14 +217,34 @@ const teamData: TeamMember[] = [
     },
     {
         "title": "CX Agent",
-        "name": "Zaida Abregu",
+        "name": "Mena Lerda Mauricio Emanuel",
         "description": "Sancor Salud - Konecta  ",
-        "contrato": "Contrato: 7 hs",
-        "email": "mail: zaida.abregu@sancor.konecta.ar",
-        "profile": "/team/zaida.jpeg",
+        "contrato": "Contrato: 6 hs",
+        "email": "mail: mauricio.mena@sancor.konecta.ar",
+        "profile": "/team/none.webp",
         "link": "/",
-        "cumpleaños": "26 de Abril"
-    }
+        "cumpleaños": "???"
+    },
+    {
+        "title": "CX Agent",
+        "name": "Pocceti Aldana Belen",
+        "description": "Sancor Salud - Konecta  ",
+        "contrato": "Contrato: 6 hs",
+        "email": "mail: aldana.poccetti@sancor.konecta.ar",
+        "profile": "/team/none.webp",
+        "link": "/",
+        "cumpleaños": "???"
+    },
+    {
+        "title": "CX Agent",
+        "name": "Vijarra Pablo Sebastian",
+        "description": "Sancor Salud - Konecta  ",
+        "contrato": "Contrato: 6 hs",
+        "email": "mail: pablo.vijarra@sancor.konecta.ar",
+        "profile": "/team/none.webp",
+        "link": "/",
+        "cumpleaños": "???"
+    },
 ];
 
 const TeamDisplay: React.FC = () => {

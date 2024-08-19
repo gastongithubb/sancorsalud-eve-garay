@@ -44,7 +44,7 @@ const NPSDiarioView: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">NPS Diario Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-4">NPS Diario</h1>
       {date && <h2 className="text-2xl font-semibold mb-4">{date}</h2>}
       {data.length > 0 ? (
         <>

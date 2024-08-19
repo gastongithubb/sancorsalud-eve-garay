@@ -1,6 +1,12 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Sticker, StickyNote, X, PinIcon, Save, Image, Search } from 'lucide-react';
+import { Sticker, StickyNote, X, PinIcon, Save, Image, Search, CornerRightDown, Palette } from 'lucide-react';
+
+type NoteColor = {
+  name: string;
+  bgColor: string;
+  textColor: string;
+};
 
 type NoteType = {
   id: string;
@@ -8,6 +14,9 @@ type NoteType = {
   x: number;
   y: number;
   isPinned: boolean;
+  width: number;
+  height: number;
+  color: NoteColor;
 };
 
 type StickerType = {
@@ -19,15 +28,28 @@ type StickerType = {
   gifUrl?: string;
 };
 
+const NOTE_COLORS: NoteColor[] = [
+  { name: 'Amarillo', bgColor: 'bg-yellow-200', textColor: 'text-black' },
+  { name: 'Rosa Pastel', bgColor: 'bg-pink-200', textColor: 'text-black' },
+  { name: 'Celeste', bgColor: 'bg-blue-200', textColor: 'text-black' },
+  { name: 'Verde Pastel', bgColor: 'bg-green-200', textColor: 'text-black' },
+  { name: 'Lavanda', bgColor: 'bg-purple-200', textColor: 'text-black' },
+  { name: 'Naranja Claro', bgColor: 'bg-orange-200', textColor: 'text-black' },
+  { name: 'Gris Claro', bgColor: 'bg-gray-200', textColor: 'text-black' },
+  { name: 'Azul Oscuro', bgColor: 'bg-blue-700', textColor: 'text-white' },
+  { name: 'Verde Oscuro', bgColor: 'bg-green-700', textColor: 'text-white' },
+  { name: 'Púrpura', bgColor: 'bg-purple-700', textColor: 'text-white' },
+];
+
 const STICKER_OPTIONS = [
-  '\u{1F642}', '\u{1F680}', '\u{1F4A1}', '\u{1F389}', '\u{1F431}', '\u{1F308}', '\u{1F355}', '\u{1F3B8}',
-  '\u{1F33A}', '\u{1F984}', '\u{1F366}', '\u{1F3A8}', '\u{1F4DA}', '\u{1F3C6}', '\u{1F3AD}', '\u{1F319}',
-  '\u{1F334}', '\u{1F3C4}', '\u{1F354}', '\u{1F6B2}', '\u{1F3A7}', '\u{1F3C0}', '\u{1F30D}', '\u{1F353}',
-  '\u{1F44C}\u{1F3FB}', '\u{1F9B7}', '\u{1F445}', '\u{1F441}\u{FE0F}', '\u{1F463}', '\u{1F9E0}', '\u{1FAC0}', '\u{1FAC1}',
-  '\u{1F468}\u{1F3FB}\u{200D}\u{1F4BB}', '\u{1F9D1}\u{1F3FB}\u{200D}\u{1F4BC}', '\u{1F469}\u{1F3FB}\u{200D}\u{1F4BC}', '\u{1F469}\u{1F3FB}\u{200D}\u{1F4BB}', 
-  '\u{1F469}\u{1F3FB}\u{200D}\u{1F9AF}\u{200D}\u{27A1}\u{FE0F}', '\u{1F9D1}\u{1F3FB}\u{200D}\u{1F9AF}\u{200D}\u{27A1}\u{FE0F}', '\u{1F42D}', '\u{1F425}',
-  '\u{1F31A}', '\u{2744}\u{FE0F}', '\u{1F37C}', '\u{1F48A}', '\u{1F489}', '\u{1FA7A}', '\u{1FA79}', '\u{274C}',
-  '\u{2705}', '\u{1F567}'
+  '😀', '🚀', '💡', '🎉', '🐱', '🌈', '🍕', '🎸',
+  '🌺', '🦄', '🍦', '🎨', '📚', '🏆', '🎭', '🌙',
+  '🌴', '🏄', '🍔', '🚲', '🎧', '🏀', '🌍', '🍓',
+  '👌🏻', '🦷', '👅', '👁️', '👣', '🧠', '🫀', '🫁',
+  '👨🏻‍💻', '🧑🏻‍💼', '👩🏻‍💼', '👩🏻‍💻', 
+  '👩🏻‍🦯‍➡️', '🧑🏻‍🦯‍➡️', '🐭', '🐥',
+  '🌚', '❄️', '🍼', '💊', '💉', '🩺', '🩹', '❌',
+  '✅', '🕧'
 ];
 
 const GIPHY_API_KEY = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
@@ -36,8 +58,10 @@ const OnlineWhiteboard = () => {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [stickers, setStickers] = useState<StickerType[]>([]);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [resizingNote, setResizingNote] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
   const [gifSearchTerm, setGifSearchTerm] = useState('');
   const [gifResults, setGifResults] = useState<any[]>([]);
   const whiteboardRef = useRef<HTMLDivElement>(null);
@@ -74,6 +98,9 @@ const OnlineWhiteboard = () => {
       x: Math.random() * 80,
       y: Math.random() * 80,
       isPinned: false,
+      width: 200,
+      height: 200,
+      color: NOTE_COLORS[0],
     };
     setNotes([...notes, newNote]);
   };
@@ -125,6 +152,13 @@ const OnlineWhiteboard = () => {
     ));
   };
 
+  const changeNoteColor = (id: string, color: NoteColor) => {
+    setNotes(notes.map(note => 
+      note.id === id ? { ...note, color: color } : note
+    ));
+    setShowColorPicker(null);
+  };
+
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedItem(id);
   };
@@ -150,6 +184,41 @@ const OnlineWhiteboard = () => {
 
     setDraggedItem(null);
   };
+
+  const handleResizeStart = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingNote(id);
+  };
+
+  const handleResize = useCallback((e: MouseEvent) => {
+    if (!resizingNote || !whiteboardRef.current) return;
+
+    const whiteboardRect = whiteboardRef.current.getBoundingClientRect();
+    setNotes(prevNotes => prevNotes.map(note => {
+      if (note.id === resizingNote) {
+        const newWidth = Math.max(200, e.clientX - whiteboardRect.left - (note.x / 100 * whiteboardRect.width));
+        const newHeight = Math.max(200, e.clientY - whiteboardRect.top - (note.y / 100 * whiteboardRect.height));
+        return { ...note, width: newWidth, height: newHeight };
+      }
+      return note;
+    }));
+  }, [resizingNote]);
+
+  const handleResizeEnd = useCallback(() => {
+    setResizingNote(null);
+  }, []);
+
+  useEffect(() => {
+    if (resizingNote) {
+      window.addEventListener('mousemove', handleResize);
+      window.addEventListener('mouseup', handleResizeEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleResize);
+      window.removeEventListener('mouseup', handleResizeEnd);
+    };
+  }, [resizingNote, handleResize, handleResizeEnd]);
 
   return (
     <div className="relative w-full h-screen bg-gray-100 overflow-hidden flex flex-col">
@@ -193,15 +262,15 @@ const OnlineWhiteboard = () => {
           {notes.map((note) => (
             <div
               key={note.id}
-              className={`absolute p-2 bg-yellow-200 rounded shadow group ${note.isPinned ? 'cursor-default' : 'cursor-move'}`}
-              style={{ left: `${note.x}%`, top: `${note.y}%` }}
+              className={`absolute p-2 ${note.color.bgColor} ${note.color.textColor} rounded shadow group ${note.isPinned ? 'cursor-default' : 'cursor-move'}`}
+              style={{ left: `${note.x}%`, top: `${note.y}%`, width: `${note.width}px`, height: `${note.height}px` }}
               draggable={!note.isPinned}
               onDragStart={(e) => handleDragStart(e, note.id)}
               onDrag={handleDrag}
               onDragEnd={handleDragEnd}
             >
               <textarea
-                className="w-32 h-32 bg-transparent resize-none focus:outline-none"
+                className={`w-full h-full bg-transparent resize-none focus:outline-none ${note.color.textColor}`}
                 value={note.text}
                 onChange={(e) => updateNote(note.id, e.target.value)}
               />
@@ -217,6 +286,30 @@ const OnlineWhiteboard = () => {
               >
                 <PinIcon size={16} />
               </button>
+              <button
+                onClick={() => setShowColorPicker(note.id)}
+                className="absolute top-0 left-0 bg-gray-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Palette size={16} />
+              </button>
+              <div
+                className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                onMouseDown={(e) => handleResizeStart(e, note.id)}
+              >
+                <CornerRightDown size={16} />
+              </div>
+              {showColorPicker === note.id && (
+                <div className="absolute top-6 left-0 bg-white p-2 rounded shadow-lg z-10">
+                  {NOTE_COLORS.map((color) => (
+                    <button
+                      key={color.name}
+                      className={`w-6 h-6 m-1 rounded-full ${color.bgColor}`}
+                      onClick={() => changeNoteColor(note.id, color)}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ))}
 
@@ -234,7 +327,7 @@ const OnlineWhiteboard = () => {
               {sticker.isGif ? (
                 <img src={sticker.gifUrl} alt={sticker.content} className="w-24 h-24 object-cover" />
               ) : (
-                <span className="text-4xl">{sticker.content}</span>
+                <span className="text-4xl" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>{sticker.content}</span>
               )}
               <button
                 onClick={() => deleteSticker(sticker.id)}
@@ -256,6 +349,7 @@ const OnlineWhiteboard = () => {
                 key={index}
                 onClick={() => addSticker(sticker)}
                 className="text-2xl hover:bg-gray-200 rounded p-1"
+                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
               >
                 {sticker}
               </button>

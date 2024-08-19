@@ -259,7 +259,7 @@ const CallCenterDashboard: React.FC = () => {
 
   return (
     <main className="container mx-auto p-4">
-      <h1 className="text-4xl font-bold mb-8">Métricas Mensuales del Call Center</h1>
+      <h1 className="text-3xl font-bold mb-8">Métricas Mensuales</h1>
       
       <div className="mb-8 flex justify-between items-center">
         <div>

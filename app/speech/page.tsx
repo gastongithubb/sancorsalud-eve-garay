@@ -1,6 +1,6 @@
 import Speechs from '../components/speechs/speech';
 
-export default function TeamPage() {
+export default function speech() {
   return (
     <div>
       <Speechs />
