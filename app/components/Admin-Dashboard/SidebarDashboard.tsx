@@ -1,12 +1,12 @@
-// components/SidebarDashboard.tsx
 'use client'
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { AdminDashboard } from './TeamDashboard';
 import { MetricUploader } from './MetricUploader';
 import EmployeeTable from './personal';
+import BreaksDashboard from './braksDiarios';
 
-type DashboardView = 'upload' | 'visualize' | 'personal';
+type DashboardView = 'upload' | 'visualize' | 'personal' | 'breaks';
 
 const SidebarDashboard: React.FC = () => {
   const [view, setView] = useState<DashboardView>('upload');
@@ -19,6 +19,8 @@ const SidebarDashboard: React.FC = () => {
         return <AdminDashboard />;
       case 'personal':
         return <EmployeeTable />;
+      case 'breaks':
+        return <BreaksDashboard />;
       default:
         return null;
     }

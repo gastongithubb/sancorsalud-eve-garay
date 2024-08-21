@@ -1,10 +1,9 @@
-// components/Sidebar.tsx
 import React from 'react';
-import { Upload, BarChart2, UserRoundPen } from 'lucide-react';
+import { Upload, BarChart2, UserRoundPen, Coffee } from 'lucide-react';
 import { Button } from "@/app/components/ui/button"
 
 interface SidebarProps {
-  setView: (view: 'upload' | 'visualize' | 'personal') => void;
+  setView: (view: 'upload' | 'visualize' | 'personal' | 'breaks') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
@@ -37,6 +36,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
         >
           <UserRoundPen className="mr-2 h-4 w-4" />
           Personal
+        </Button>
+        <Button
+          variant="ghost"
+          className="justify-start"
+          onClick={() => setView('breaks')}
+        >
+          <Coffee className="mr-2 h-4 w-4" />
+          Breaks
         </Button>
       </nav>
     </div>

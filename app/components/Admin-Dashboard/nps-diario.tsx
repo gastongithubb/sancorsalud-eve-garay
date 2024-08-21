@@ -14,7 +14,7 @@ interface EmployeeData {
   RD: number;
 }
 
-const parseCSV = (csv: string, date: string): EmployeeData[] => {
+export const parseCSV = (csv: string, date: string): EmployeeData[] => {
   const lines = csv.split('\n');
   const data: EmployeeData[] = [];
 

@@ -24,7 +24,7 @@ interface CalidadData {
   [month: string]: string | number;
 }
 
-const parseCSV = (csv: string) => {
+export const parseCSV = (csv: string) => {
   const lines = csv.split('\n');
   const employeeData: EmployeeData[] = [];
   const calidadData: CalidadData[] = [];
