@@ -25,17 +25,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const saveSessionToLocalStorage = (token: string, user: User) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('isLoggedIn', 'true');
+  };
+
+  const clearSessionFromLocalStorage = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isLoggedIn');
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const user = findUserByToken(token);
-      if (user) {
-        setIsLoggedIn(true);
-        setUser(user);
-        setIsAdmin(user.isAdmin);
-      } else {
-        localStorage.removeItem('token');
-      }
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
+
+    if (storedToken && storedUser && storedIsLoggedIn === 'true') {
+      const parsedUser: User = JSON.parse(storedUser);
+      setIsLoggedIn(true);
+      setUser(parsedUser);
+      setIsAdmin(parsedUser.isAdmin);
+    } else {
+      clearSessionFromLocalStorage();
     }
     setIsLoading(false);
   }, []);
@@ -48,11 +61,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         const token = generateToken();
         setUserToken(user, token);
-        localStorage.setItem('token', token);
+        saveSessionToLocalStorage(token, user);
         setIsLoggedIn(true);
         setUser(user);
         setIsAdmin(user.isAdmin);
-        console.log('Token saved:', token); // Add this log
+        console.log('Session saved to localStorage');
       } else {
         throw new Error('Credenciales inválidas');
       }
@@ -74,17 +87,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setIsAdmin(false);
     setError(null);
-    localStorage.removeItem('token');
+    clearSessionFromLocalStorage();
+    console.log('Session cleared from localStorage');
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
+    if (isLoggedIn) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        saveSessionToLocalStorage(token, updatedUser);
+        console.log('Updated user saved to localStorage');
+      }
+    }
   };
 
   const getToken = () => {
-    const token = localStorage.getItem('token');
-    console.log('Retrieved token:', token); // Add this log
-    return token;
+    return localStorage.getItem('token');
   };
 
   return (
