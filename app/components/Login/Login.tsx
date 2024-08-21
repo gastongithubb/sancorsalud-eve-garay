@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/AuthContext';
 
@@ -10,7 +10,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isLoggedIn } = useAuth();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.push('/');
+    }
+  }, [isLoggedIn, router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -19,7 +25,7 @@ export default function Login() {
 
     try {
       await login(username, password);
-      router.push('/');  // Redirige a la página principal después del login exitoso
+      // No necesitamos redirigir aquí, el useEffect se encargará de eso
     } catch (err) {
       setError('Inicio de sesión fallido. Por favor, verifica tus credenciales.');
     } finally {
