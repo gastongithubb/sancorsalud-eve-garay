@@ -1,32 +1,43 @@
 // components/Sidebar.tsx
 import React from 'react';
-import { Upload, BarChart2 } from 'lucide-react';
+import { Upload, BarChart2, UserRoundPen } from 'lucide-react';
+import { Button } from "@/app/components/ui/button"
 
 interface SidebarProps {
-  setView: (view: 'upload' | 'visualize') => void;
+  setView: (view: 'upload' | 'visualize' | 'personal') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
   return (
-    <div className="w-64 bg-white shadow-lg">
+    <div className="w-64 bg-white shadow-lg h-full">
       <div className="p-4">
         <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
       </div>
-      <nav className="mt-6">
-        <button
+      <nav className="mt-6 flex flex-col gap-2 p-4">
+        <Button
+          variant="ghost"
+          className="justify-start"
           onClick={() => setView('upload')}
-          className="w-full flex items-center p-4 text-gray-700 hover:bg-gray-100"
         >
-          <Upload className="mr-4" />
+          <Upload className="mr-2 h-4 w-4" />
           Cargar Métricas
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          className="justify-start"
           onClick={() => setView('visualize')}
-          className="w-full flex items-center p-4 text-gray-700 hover:bg-gray-100"
         >
-          <BarChart2 className="mr-4" />
+          <BarChart2 className="mr-2 h-4 w-4" />
           Visualizar Métricas
-        </button>
+        </Button>
+        <Button
+          variant="ghost"
+          className="justify-start"
+          onClick={() => setView('personal')}
+        >
+          <UserRoundPen className="mr-2 h-4 w-4" />
+          Personal
+        </Button>
       </nav>
     </div>
   );

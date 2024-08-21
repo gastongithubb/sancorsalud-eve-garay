@@ -137,10 +137,10 @@ export const authUsers = sqliteTable('auth_users', {
 
 export const breakSchedules = sqliteTable('break_schedules', {
   id: integer('id').primaryKey(),
-  personnelId: integer('personnel_id').notNull(),
+  personnelId: integer('personnelId').notNull(), // Cambiado de personnel_id a personnelId
   day: text('day').notNull(),
-  startTime: text('start_time').notNull(),
-  endTime: text('end_time').notNull(),
+  startTime: text('startTime').notNull(), // Cambiado de start_time a startTime
+  endTime: text('endTime').notNull(), // Cambiado de end_time a endTime
   week: integer('week').notNull(),
   month: integer('month').notNull(),
   year: integer('year').notNull(),
@@ -276,14 +276,14 @@ export async function ensureTablesExist() {
     await client.execute(`
       CREATE TABLE IF NOT EXISTS break_schedules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        personnel_id INTEGER NOT NULL,
+        personnelId INTEGER NOT NULL,
         day TEXT NOT NULL,
-        start_time TEXT NOT NULL,
-        end_time TEXT NOT NULL,
+        startTime TEXT NOT NULL,
+        endTime TEXT NOT NULL,
         week INTEGER NOT NULL,
         month INTEGER NOT NULL,
         year INTEGER NOT NULL,
-        FOREIGN KEY (personnel_id) REFERENCES personnel(id)
+        FOREIGN KEY (personnelId) REFERENCES personnel(id)
       )
     `);
     console.log('Break schedules table verified/created');
@@ -583,6 +583,21 @@ export async function updateBreakSchedule(schedule: BreakScheduleInsert): Promis
   } catch (error: unknown) {
     console.error('Detailed error updating break schedule:', error);
     throw new Error(`Failed to update break schedule: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function updateBreakSchedulesTable() {
+  const client = getClient();
+  try {
+    await client.execute(`
+      ALTER TABLE break_schedules RENAME COLUMN personnel_id TO personnelId;
+      ALTER TABLE break_schedules RENAME COLUMN start_time TO startTime;
+      ALTER TABLE break_schedules RENAME COLUMN end_time TO endTime;
+    `);
+    console.log('Break schedules table updated successfully');
+  } catch (error) {
+    console.error('Error updating break schedules table:', error);
+    throw error;
   }
 }
 

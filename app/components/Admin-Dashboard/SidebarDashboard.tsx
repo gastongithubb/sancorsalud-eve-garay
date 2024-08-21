@@ -1,20 +1,34 @@
-'use client'
 // components/SidebarDashboard.tsx
+'use client'
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { AdminDashboard } from './TeamDashboard';
 import { MetricUploader } from './MetricUploader';
+import EmployeeTable from './personal';
 
-type DashboardView = 'upload' | 'visualize';
+type DashboardView = 'upload' | 'visualize' | 'personal';
 
 const SidebarDashboard: React.FC = () => {
   const [view, setView] = useState<DashboardView>('upload');
+
+  const renderView = () => {
+    switch (view) {
+      case 'upload':
+        return <MetricUploader />;
+      case 'visualize':
+        return <AdminDashboard />;
+      case 'personal':
+        return <EmployeeTable />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar setView={setView} />
       <main className="flex-1 p-6 overflow-y-auto">
-        {view === 'upload' ? <MetricUploader /> : <AdminDashboard />}
+        {renderView()}
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import './globals.css'
 import { Providers } from './providers'
@@ -11,15 +11,29 @@ import { cn } from "@/lib/utils"
 
 const LoadingIndicator = () => <div className="flex justify-center items-center h-screen">Cargando...</div>
 
+const Skeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+  </div>
+);
+
 function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const [isContentLoading, setIsContentLoading] = useState(true)
 
   useEffect(() => {
     if (!isLoading) {
       if (!isLoggedIn && pathname !== '/Login') {
         router.push('/Login')
+      } else {
+        // Simula una carga de contenido
+        setTimeout(() => {
+          setIsContentLoading(false)
+        }, 1000)
       }
     }
   }, [isLoggedIn, isLoading, pathname, router]);
@@ -40,24 +54,12 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
         "flex-grow",
         isLoggedIn && pathname !== '/Login' ? "pt-24 sm:pt-28 md:pt-32 lg:pt-36" : ""
       )}>
-        {children}
+        {isContentLoading ? <Skeleton /> : children}
       </main>
       {isLoggedIn && pathname !== '/Login' && <Footer />}
     </>
   )
 }
-
-// function DebugInfo() {
-//   const { isLoggedIn, isLoading } = useAuth()
-//   const pathname = usePathname()
-
-//   return (
-//     <div className="fixed bottom-0 left-0 bg-black text-white p-2 text-xs">
-//       isLoggedIn: {String(isLoggedIn)}, isLoading: {String(isLoading)}, 
-//       pathname: {pathname}
-//     </div>
-//   )
-// }
 
 export default function RootLayout({
   children,
@@ -76,7 +78,6 @@ export default function RootLayout({
             <AuthWrapper>
               {children}
             </AuthWrapper>
-            {/* <DebugInfo /> */}
           </AuthProvider>
         </Providers>
       </body>

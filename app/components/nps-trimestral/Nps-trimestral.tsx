@@ -1,110 +1,148 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { getPersonnel, MonthlyData } from '@/utils/database';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getTrimestralMetrics } from '@/utils/database';
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const MonthlyComparison: React.FC = () => {
-  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
-  const [monthlyData, setMonthlyData] = useState<{ [month: string]: MonthlyData[] }>({});
+interface TrimestralMetric {
+  id: number;
+  employeeName: string;
+  month: string;
+  Q: number;
+  NPS: number;
+  SAT: number;
+  RD: number;
+}
+
+const MONTHS = ['MAYO', 'JUNIO', 'JULIO'];
+
+const TrimestralMetricsPage: React.FC = () => {
+  const [metrics, setMetrics] = useState<TrimestralMetric[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setError(null);
-      const data: { [month: string]: MonthlyData[] } = {};
-      for (const month of selectedMonths) {
-        try {
-          const personnelData = await getPersonnel(month);
-          if (personnelData.length === 0) {
-            console.warn(`No data found for ${month}`);
-          }
-          data[month] = personnelData;
-        } catch (err) {
-          console.error(`Error fetching data for ${month}:`, err);
-          setError(`Failed to fetch data for ${month}`);
-        }
+    const fetchMetrics = async () => {
+      try {
+        const allMetrics = await Promise.all(
+          MONTHS.map(month => getTrimestralMetrics(month))
+        );
+        setMetrics(allMetrics.flat());
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching metrics:', err);
+        setError('Failed to fetch metrics. Please try again later.');
+        setLoading(false);
       }
-      setMonthlyData(data);
     };
 
-    if (selectedMonths.length > 0) {
-      fetchData();
-    }
-  }, [selectedMonths]);
+    fetchMetrics();
+  }, []);
 
-  const handleMonthSelect = (month: string) => {
-    if (selectedMonths.includes(month)) {
-      setSelectedMonths(selectedMonths.filter(m => m !== month));
-    } else if (selectedMonths.length < 3) {
-      setSelectedMonths([...selectedMonths, month]);
-    }
+  const groupMetricsByEmployee = (metrics: TrimestralMetric[]) => {
+    return metrics.reduce((acc, metric) => {
+      if (!acc[metric.employeeName]) {
+        acc[metric.employeeName] = {};
+      }
+      acc[metric.employeeName][metric.month] = metric;
+      return acc;
+    }, {} as Record<string, Record<string, TrimestralMetric>>);
   };
 
-  const getAverageMetrics = (data: MonthlyData[]): { nps: number; csat: number; rd: number } => {
-    if (data.length === 0) return { nps: 0, csat: 0, rd: 0 };
-    const sum = data.reduce((acc, curr) => ({
-      nps: acc.nps + curr.nps,
-      csat: acc.csat + curr.csat,
-      rd: acc.rd + curr.rd
-    }), { nps: 0, csat: 0, rd: 0 });
+  const groupedMetrics = groupMetricsByEmployee(metrics);
 
-    return {
-      nps: Number((sum.nps / data.length).toFixed(2)),
-      csat: Number((sum.csat / data.length).toFixed(2)),
-      rd: Number((sum.rd / data.length).toFixed(2))
-    };
+  const renderMetricsTable = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Employee</TableHead>
+          {MONTHS.map(month => (
+            <TableHead key={month}>{month}</TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Object.entries(groupedMetrics).map(([employeeName, monthlyMetrics]) => (
+          <TableRow key={employeeName}>
+            <TableCell>{employeeName}</TableCell>
+            {MONTHS.map(month => (
+              <TableCell key={month}>
+                {monthlyMetrics[month] ? (
+                  <>
+                    <div>Q: {monthlyMetrics[month].Q}</div>
+                    <div>NPS: {monthlyMetrics[month].NPS}</div>
+                    <div>SAT: {monthlyMetrics[month].SAT.toFixed(2)}%</div>
+                    <div>RD: {monthlyMetrics[month].RD.toFixed(2)}%</div>
+                  </>
+                ) : (
+                  'N/A'
+                )}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  const renderMetricsChart = (employeeName: string, monthlyMetrics: Record<string, TrimestralMetric>) => {
+    const chartData = MONTHS.map(month => ({
+      name: month,
+      NPS: monthlyMetrics[month]?.NPS || 0,
+      SAT: monthlyMetrics[month]?.SAT || 0,
+      RD: monthlyMetrics[month]?.RD || 0,
+    }));
+
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>{employeeName}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="NPS" stroke="#8884d8" />
+              <Line type="monotone" dataKey="SAT" stroke="#82ca9d" />
+              <Line type="monotone" dataKey="RD" stroke="#ffc658" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    );
   };
 
-  const compareData = selectedMonths.map(month => ({
-    month,
-    ...getAverageMetrics(monthlyData[month] || [])
-  }));
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
-    <div className="bg-gray-100 p-8 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold mb-6 text-blue-600">Comparación Mensual</h1>
-      
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2 text-green-600">Seleccione hasta 3 meses para comparar:</h2>
-        <div className="flex flex-wrap gap-2">
-          {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((month) => (
-            <button
-              key={month}
-              onClick={() => handleMonthSelect(month)}
-              className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                selectedMonths.includes(month)
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : 'bg-white text-blue-500 hover:bg-blue-100'
-              }`}
-            >
-              {month}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {error && <div className="text-red-500 mb-4 p-2 bg-red-100 rounded">{error}</div>}
-
-      {compareData.length > 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-4 h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={compareData}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip contentStyle={{ backgroundColor: '#f3f4f6', border: 'none', borderRadius: '8px' }} />
-              <Legend />
-              <Bar dataKey="nps" fill="#1e40af" name="NPS" />
-              <Bar dataKey="csat" fill="#047857" name="CSAT" />
-              <Bar dataKey="rd" fill="#0ea5e9" name="RD" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="text-gray-500 bg-white p-4 rounded-lg shadow">No hay datos para mostrar. Por favor, seleccione al menos un mes.</div>
-      )}
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">Trimestral Metrics Dashboard</h1>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Metrics Table</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {renderMetricsTable()}
+        </CardContent>
+      </Card>
+      <h2 className="text-2xl font-bold mb-4">Employee Charts</h2>
+      {Object.entries(groupedMetrics).map(([employeeName, monthlyMetrics]) => (
+        renderMetricsChart(employeeName, monthlyMetrics)
+      ))}
     </div>
   );
 };
 
-export default MonthlyComparison;
+export default TrimestralMetricsPage;
