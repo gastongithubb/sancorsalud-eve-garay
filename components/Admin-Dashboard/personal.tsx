@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getPersonnel, updatePersonnel, PersonnelSelect } from '@/utils/database';
 import { User, Clock, Briefcase, Search, Edit } from 'lucide-react';
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { toast } from "@/app/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 
 type EmployeeCardProps = {
   employee: PersonnelSelect;

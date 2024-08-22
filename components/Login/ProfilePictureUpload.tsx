@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/app/AuthContext';
+import Image from 'next/image';
 
 const ProfilePictureUpload: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -59,7 +60,7 @@ const ProfilePictureUpload: React.FC = () => {
       </label>
       <div className="mt-1 flex items-center">
         {user?.profilePicture && (
-          <img
+          <Image
             src={user.profilePicture}
             alt="Foto de perfil"
             className="w-12 h-12 rounded-full object-cover mr-4"

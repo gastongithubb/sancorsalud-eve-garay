@@ -1,4 +1,4 @@
-import Speechs from '../components/speechs/speech';
+import Speechs from '@/components/speechs/speech';
 
 export default function speech() {
   return (

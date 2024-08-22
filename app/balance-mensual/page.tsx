@@ -1,7 +1,7 @@
 import React from 'react';
-import BalanceMensual from '@/app/components/balanceMensual/Balance-Mensual';
+import BalanceMensual from '@/components/balanceMensual/Balance-Mensual';
 
-const ForoPage: React.FC = () => {
+const BalanceMetricas: React.FC = () => {
   return (
     <div>
       <BalanceMensual />
@@ -9,4 +9,4 @@ const ForoPage: React.FC = () => {
   );
 };
 
-export default ForoPage;
+export default BalanceMetricas;

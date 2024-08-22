@@ -1,4 +1,4 @@
-import NpsIndividual from '../components/nps-individual/Nps-individual';
+import NpsIndividual from '@/components/nps-individual/Nps-individual';
 
 export default function EmployeesPage() {
   return (

@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { parseCSV } from '@/lib/excelParser';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { insertEmployeeMetric, EmployeeMetrics, createOrUpdateEmployeeMetricsTable } from '@/utils/database';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];

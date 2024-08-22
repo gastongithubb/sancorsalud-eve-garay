@@ -1,6 +1,6 @@
-import Nomenclador from '@/app/components/Herramientas/NomencladorNU';
+import Nomenclador from '@/components/Herramientas/NomencladorNU';
 
-export default function Home() {
+export default function NomencladorNu() {
   return (
     <main>
       <Nomenclador />

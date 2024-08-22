@@ -3,11 +3,11 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
-import Hero from './components/Hero';
-import Frases from './components/Frases';
-import Casos from './components/casos';
-import Team from './components/Team';
-import Faq from './components/Faq';
+import Hero from '@/components/Hero';
+import Frases from '@/components/Frases';
+import Casos from '@/components/casos';
+import Team from '@/components/Team';
+import Faq from '@/components/Faq';
 
 export default function ClientHome() {
   const { isLoggedIn } = useAuth()

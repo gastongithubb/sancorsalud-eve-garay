@@ -1,4 +1,4 @@
-import TeamDisplay from '../components/Team/TeamDisplay';
+import TeamDisplay from '@/components/Team/TeamDisplay';
 
 export default function TeamPage() {
   return (

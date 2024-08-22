@@ -1,4 +1,4 @@
-import Reclamos from '../components/Herramientas/CaseManagement';
+import Reclamos from '@/components/Herramientas/CaseManagement';
 
 export default function TeamPage() {
   return (

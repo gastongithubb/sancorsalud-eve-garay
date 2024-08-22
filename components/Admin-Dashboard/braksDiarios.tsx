@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/app/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table"
+import { Card, CardContent } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { clearBreaks, insertBreak, getBreaks } from '@/utils/database';
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 interface BreakData {
   employeeName: string;

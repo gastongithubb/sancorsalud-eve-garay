@@ -5,8 +5,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import './globals.css'
 import { Providers } from './providers'
 import { AuthProvider, useAuth } from './AuthContext'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 import { cn } from "@/lib/utils"
 
 const LoadingIndicator = () => <div className="flex justify-center items-center h-screen">Cargando...</div>

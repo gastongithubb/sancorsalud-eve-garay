@@ -1,6 +1,6 @@
-import NewsManager from '../components/NewsManager';
+import NewsManager from '@/components/NewsManager';
 
-export default function HomePage() {
+export default function Manager() {
   return (
     <div>
       <NewsManager />

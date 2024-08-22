@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface SpeechVersion {
   formal?: string;

@@ -1,4 +1,4 @@
-import EmployeeTable from '../components/programacion/EmployeeTable';
+import EmployeeTable from '@/components/programacion/EmployeeTable';
 
 export default function EmployeesPage() {
   return (

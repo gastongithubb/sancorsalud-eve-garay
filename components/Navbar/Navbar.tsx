@@ -6,7 +6,7 @@ import Image from "next/legacy/image";
 import { useRouter } from 'next/navigation';
 import { Transition } from '@headlessui/react';
 import { toast } from 'react-toastify';
-import { useAuth } from '../../AuthContext';
+import { useAuth } from '@/app/AuthContext';
 
 const navLinks = [
   { 

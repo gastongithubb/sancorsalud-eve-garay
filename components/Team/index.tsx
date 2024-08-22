@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from "next/legacy/image";
 import Link from 'next/link';
-import teamData from '../../Data/team.json';
+import teamData from '@/app/Data/team.json';
 import { motion } from 'framer-motion';
 
 const Topic: React.FC<{ title: string; description: string }> = ({ title, description }) => (

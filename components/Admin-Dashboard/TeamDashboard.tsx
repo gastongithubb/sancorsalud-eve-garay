@@ -1,9 +1,9 @@
 // components/AdminDashboard.tsx
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
-import NpsIndividual from "@/app/components/nps-individual/Nps-individual"
-import BalanceMensual from '@/app/components/balanceMensual/Balance-Mensual';
-import NpsTrimestral from '@/app/components/nps-trimestral/Nps-trimestral';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import NpsIndividual from "@/components/nps-individual/Nps-individual"
+import BalanceMensual from '@/components/balanceMensual/Balance-Mensual';
+import NpsTrimestral from '@/components/nps-trimestral/Nps-trimestral';
 
 const DashboardOption = {
   MENSUAL: 'balance-mensual',

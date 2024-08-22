@@ -1,6 +1,6 @@
 import React from 'react';
 import { Upload, BarChart2, UserRoundPen, Coffee } from 'lucide-react';
-import { Button } from "@/app/components/ui/button"
+import { Button } from "@/components/ui/button"
 
 interface SidebarProps {
   setView: (view: 'upload' | 'visualize' | 'personal' | 'breaks') => void;
