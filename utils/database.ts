@@ -75,12 +75,7 @@ export const personnel = sqliteTable('personnel', {
   entryTime: text('entry_time').notNull(),
   exitTime: text('exit_time').notNull(),
   hoursWorked: integer('hours_worked').notNull(),
-  xLite: text('x_lite').notNull(),
-  responses: integer('responses').notNull().default(0),
-  nps: integer('nps').notNull().default(0),
-  csat: integer('csat').notNull().default(0),
-  rd: integer('rd').notNull().default(0),
-  month: text('month').notNull()
+  xLite: text('x_lite').notNull()
 });
 
 export const nps_diario = sqliteTable('nps_diario', {
@@ -209,11 +204,6 @@ export async function ensureTablesExist() {
         exit_time TEXT NOT NULL,
         hours_worked INTEGER NOT NULL,
         x_lite TEXT NOT NULL,
-        responses INTEGER NOT NULL DEFAULT 0,
-        nps INTEGER NOT NULL DEFAULT 0,
-        csat INTEGER NOT NULL DEFAULT 0,
-        rd INTEGER NOT NULL DEFAULT 0,
-        month TEXT NOT NULL
       )
     `);
     console.log('Personnel table verified/created');
@@ -338,44 +328,12 @@ export async function initializeAllTables() {
 }
 
 // Database operations
-export async function getMonthlyData(): Promise<MonthlyData[]> {
-  const db = getDB();
-  try {
-    const result = await db.select({
-      month: personnel.month,
-      nps: sql<number>`AVG(${personnel.nps})`.as('nps'),
-      csat: sql<number>`AVG(${personnel.csat})`.as('csat'),
-      rd: sql<number>`AVG(${personnel.rd})`.as('rd'),
-    })
-    .from(personnel)
-    .groupBy(personnel.month)
-    .execute();
 
-    return result.map(row => ({
-      month: row.month,
-      nps: parseFloat(row.nps?.toFixed(2) ?? '0'),
-      csat: parseFloat(row.csat?.toFixed(2) ?? '0'),
-      rd: parseFloat(row.rd?.toFixed(2) ?? '0'),
-    }));
-  } catch (error) {
-    console.error('Error fetching monthly data:', error);
-    throw new Error(`Failed to fetch monthly data: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-
-
-export async function getPersonnel(month?: string): Promise<PersonnelSelect[]> {
+export async function getPersonnel(): Promise<PersonnelSelect[]> {
   const db = getDB();
   try {
     await ensureTablesExist();
-    const query = db.select().from(personnel);
-    
-    if (month) {
-      return await query.where(eq(personnel.month, month)).all();
-    } else {
-      return await query.all();
-    }
+    return await db.select().from(personnel).all();
   } catch (error: unknown) {
     console.error('Error fetching personnel:', error);
     throw new Error(`Failed to fetch personnel: ${error instanceof Error ? error.message : String(error)}`);
@@ -386,7 +344,16 @@ export async function addPersonnel(person: PersonnelInsert): Promise<void> {
   const db = getDB();
   try {
     await ensureTablesExist();
-    await db.insert(personnel).values(person).run();
+    await db.insert(personnel).values({
+      firstName: person.firstName,
+      lastName: person.lastName,
+      email: person.email,
+      dni: person.dni,
+      entryTime: person.entryTime,
+      exitTime: person.exitTime,
+      hoursWorked: person.hoursWorked,
+      xLite: person.xLite
+    }).run();
   } catch (error: unknown) {
     console.error('Error adding personnel:', error);
     throw new Error(`Failed to add personnel: ${error instanceof Error ? error.message : String(error)}`);
@@ -398,7 +365,16 @@ export async function updatePersonnel(person: PersonnelSelect): Promise<void> {
   try {
     await db
       .update(personnel)
-      .set(person)
+      .set({
+        firstName: person.firstName,
+        lastName: person.lastName,
+        email: person.email,
+        dni: person.dni,
+        entryTime: person.entryTime,
+        exitTime: person.exitTime,
+        hoursWorked: person.hoursWorked,
+        xLite: person.xLite
+      })
       .where(eq(personnel.id, person.id))
       .run();
   } catch (error: unknown) {

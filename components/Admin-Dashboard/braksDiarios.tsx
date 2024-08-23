@@ -6,35 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 interface BreakData {
+  id?: number;
   employeeName: string;
   date: string;
   breakTime: string;
+  dayOfWeek?: string;  // Make dayOfWeek optional
 }
 
-const parseCSV = (csv: string): BreakData[] => {
-  const lines = csv.split('\n');
-  const data: BreakData[] = [];
-  let currentDate = '';
-
-  lines.forEach(line => {
-    const [first, second] = line.split(',');
-    if (first.startsWith('"') && first.endsWith('"')) {
-      currentDate = first.replace(/"/g, '').trim();
-    } else if (first && second) {
-      data.push({
-        employeeName: first.trim(),
-        date: currentDate,
-        breakTime: second.trim()
-      });
-    }
-  });
-
-  return data.filter(item => item.breakTime !== '-');
+const getDayOfWeek = (dateString: string): string => {
+  const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const date = new Date(dateString);
+  return days[date.getDay()];
 };
 
 const BreaksDashboard: React.FC = () => {
-  const [csvData, setCsvData] = useState<BreakData[]>([]);
-  const [dbData, setDbData] = useState<BreakData[]>([]);
+  const [allData, setAllData] = useState<BreakData[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -45,7 +31,11 @@ const BreaksDashboard: React.FC = () => {
   const loadDataFromDb = async () => {
     try {
       const breaks = await getBreaks();
-      setDbData(breaks);
+      const breakDataWithDayOfWeek = breaks.map(breakItem => ({
+        ...breakItem,
+        dayOfWeek: getDayOfWeek(breakItem.date)
+      }));
+      setAllData(breakDataWithDayOfWeek);
     } catch (error) {
       console.error('Error loading data from database:', error);
     }
@@ -58,8 +48,19 @@ const BreaksDashboard: React.FC = () => {
       reader.onload = (e) => {
         const content = e.target?.result;
         if (typeof content === 'string') {
-          const parsedData = parseCSV(content);
-          setCsvData(parsedData);
+          try {
+            const jsonData = JSON.parse(content);
+            const parsedData = jsonData.map((item: any) => ({
+              employeeName: item['lunes, 19 de agosto de 2024'],
+              date: item['lunes, 19 de agosto de 2024'],
+              breakTime: item[''] || 'No asignado',
+              dayOfWeek: getDayOfWeek(item['lunes, 19 de agosto de 2024'])
+            })).filter((item: BreakData) => item.employeeName && item.employeeName !== 'Nombre');
+            setAllData(parsedData);
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            alert('Error parsing JSON file. Please ensure it\'s a valid JSON format.');
+          }
         }
       };
       reader.readAsText(file);
@@ -67,16 +68,15 @@ const BreaksDashboard: React.FC = () => {
   };
 
   const saveToDatabase = async () => {
-    if (csvData.length === 0) return;
+    if (allData.length === 0) return;
 
     setIsSaving(true);
     try {
       await clearBreaks();
-      for (const breakItem of csvData) {
+      for (const breakItem of allData) {
         await insertBreak(breakItem);
       }
       alert('Break data updated successfully!');
-      loadDataFromDb();
     } catch (error) {
       console.error('Error updating break data:', error);
       alert('Error updating break data. Please try again.');
@@ -85,38 +85,36 @@ const BreaksDashboard: React.FC = () => {
     }
   };
 
-  const displayData = csvData.length > 0 ? csvData : dbData;
-
-  const filteredData = displayData.filter(item => 
+  const filteredData = allData.filter(item => 
     item.employeeName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const groupedData = filteredData.reduce((acc, item) => {
-    if (!acc[item.date]) {
-      acc[item.date] = [];
+    if (!acc[item.dayOfWeek || '']) {
+      acc[item.dayOfWeek || ''] = [];
     }
-    acc[item.date].push(item);
+    acc[item.dayOfWeek || ''].push(item);
     return acc;
   }, {} as Record<string, BreakData[]>);
 
+  const daysOrder = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Grupo Sancor</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Grupo Sancor</h1>
       <div className="mb-4 flex items-center gap-4">
         <Input
           type="file"
           onChange={handleFileUpload}
-          accept=".csv"
+          accept=".json"
           className="flex-grow"
         />
-        {csvData.length > 0 && (
-          <Button
-            onClick={saveToDatabase}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Updating...' : 'Update Database'}
-          </Button>
-        )}
+        <Button
+          onClick={saveToDatabase}
+          disabled={isSaving || allData.length === 0}
+        >
+          {isSaving ? 'Actualizando...' : 'Actualizar Base de Datos'}
+        </Button>
       </div>
       <Input
         type="text"
@@ -124,31 +122,32 @@ const BreaksDashboard: React.FC = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="mb-4"
       />
-      <div className="space-y-8">
-        {Object.entries(groupedData).map(([date, breaks]) => (
-          <Card key={date} className="mb-6">
-            <CardContent>
-              <h2 className="text-xl font-bold mb-4">{date}</h2>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Break</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {breaks.map((breakItem, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{breakItem.employeeName}</TableCell>
-                      <TableCell>{breakItem.breakTime}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {daysOrder.map(day => (
+                  <TableHead key={day} className="text-center">{day}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                {daysOrder.map(day => (
+                  <TableCell key={day} className="align-top">
+                    {groupedData[day]?.map((breakItem, index) => (
+                      <div key={index} className="mb-2">
+                        <strong>{breakItem.employeeName}</strong>: {breakItem.breakTime}
+                      </div>
+                    )) || 'No hay breaks programados'}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };

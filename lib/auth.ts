@@ -29,8 +29,6 @@ export async function register(email: string, password: string, name?: string): 
         exitTime: '',
         hoursWorked: 0,
         xLite: '',
-        month: new Date().toISOString().slice(0, 7), // Current month in YYYY-MM format
-        // Add the hashed password to a separate column or consider adding a new table for auth
       })
       .returning({
         id: personnel.id,
