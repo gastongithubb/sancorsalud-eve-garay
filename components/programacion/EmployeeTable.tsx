@@ -1,13 +1,22 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import { getPersonnel, PersonnelSelect } from '@/utils/database';
-import { User, Clock, Briefcase, Search } from 'lucide-react';
+import { User, Clock, Briefcase, Search, Coffee } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
 
 type EmployeeCardProps = {
   employee: PersonnelSelect;
 };
 
 function EmployeeCard({ employee }: EmployeeCardProps) {
+  const router = useRouter();
+
+  const handleBreaksRedirect = () => {
+    router.push(`/breaksDiarios`);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
@@ -18,6 +27,10 @@ function EmployeeCard({ employee }: EmployeeCardProps) {
           </div>
           <div className="mt-2 text-sm">{employee.email}</div>
         </div>
+        <Button variant="outline" size="sm" onClick={handleBreaksRedirect} className="bg-white text-blue-600 hover:bg-blue-100">
+          <Coffee size={14} className="mr-1" />
+          Breaks
+        </Button>
       </div>
       <div className="p-4">
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
