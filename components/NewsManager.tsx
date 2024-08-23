@@ -17,26 +17,6 @@ const NewsManager: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-  const fetchNews = useCallback(async (loadMore = false) => {
-    if (loading || (!loadMore && news.length > 0)) return;
-    setLoading(true);
-    try {
-      const newsData = await getNews(page, 10);
-      if (loadMore) {
-        setNews(prev => [...prev, ...newsData]);
-      } else {
-        setNews(newsData);
-      }
-      setHasMore(newsData.length === 10);
-      setPage(prev => prev + 1);
-    } catch (err) {
-      console.error('Error fetching news:', err);
-      setError('Error al obtener las noticias');
-    } finally {
-      setLoading(false);
-    }
-  }, [loading, news.length, page]);
-
   const observer = useRef<IntersectionObserver | null>(null);
   const lastNewsElementRef = useCallback((node: HTMLLIElement | null) => {
     if (loading) return;
@@ -47,11 +27,11 @@ const NewsManager: React.FC = () => {
       }
     });
     if (node) observer.current.observe(node);
-  }, [loading, hasMore, fetchNews]);
+  }, [loading, hasMore]);
 
   useEffect(() => {
     fetchNews();
-  }, [fetchNews]);
+  }, []);
 
   useEffect(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -77,6 +57,26 @@ const NewsManager: React.FC = () => {
 
     checkAdminStatus();
   }, []);
+
+  const fetchNews = async (loadMore = false) => {
+    if (loading || (!loadMore && news.length > 0)) return;
+    setLoading(true);
+    try {
+      const newsData = await getNews(page, 10);
+      if (loadMore) {
+        setNews(prev => [...prev, ...newsData]);
+      } else {
+        setNews(newsData);
+      }
+      setHasMore(newsData.length === 10);
+      setPage(prev => prev + 1);
+    } catch (err) {
+      console.error('Error fetching news:', err);
+      setError('Error al obtener las noticias');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddNews = async (e: React.FormEvent) => {
     e.preventDefault();
