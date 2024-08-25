@@ -88,6 +88,24 @@ export const nps_diario = sqliteTable('nps_diario', {
   RD: real('RD').notNull(),
 });
 
+export const customerExperience = sqliteTable('customer_experience', {
+  id: integer('id').primaryKey(),
+  ExperienciaColaborador: text('ExperienciaColaborador').notNull(),
+  NpsDescripcionEncuestaWit: text('NpsDescripcionEncuestaWit').notNull(),
+  NumeroCasoCRM: text('NumeroCasoCRM').notNull(),
+  ResolucionDeclaradaEncuestaWit: text('ResolucionDeclaradaEncuestaWit').notNull(),
+  SatisfaccionCsatEncuestaWit: text('SatisfaccionCsatEncuestaWit').notNull(),
+  SubtipoCasoCRM: text('SubtipoCasoCRM').notNull(),
+  SubtipoFinalCasoCRM: text('SubtipoFinalCasoCRM').notNull(),
+  TipoCaso: text('TipoCaso').notNull(),
+  TipoRegistro: text('TipoRegistro').notNull(),
+  NpsEncuestaWit: text('NpsEncuestaWit').notNull(),
+  DiaSinHora: text('DiaSinHora').notNull(),
+  EsfuerzoCesEncuestaWit: text('EsfuerzoCesEncuestaWit').notNull(),
+  DescCESAgrupado: text('DescCESAgrupado').notNull(),
+  DescSATAgrupado: text('DescSATAgrupado').notNull(),
+});
+
 export const trimetralMetrics = sqliteTable('trimestral_metrics', {
   id: integer('id').primaryKey(),
   employeeName: text('employee_name').notNull(),
@@ -149,6 +167,8 @@ export type NewsSelect = typeof news.$inferSelect;
 export type NewsInsert = typeof news.$inferInsert;
 export type NPSDiarioSelect = typeof nps_diario.$inferSelect;
 export type NPSDiarioInsert = typeof nps_diario.$inferInsert;
+export type CustomerExperienceSelect = typeof customerExperience.$inferSelect;
+export type CustomerExperienceInsert = typeof customerExperience.$inferInsert;
 export type BreakSelect = typeof breaks.$inferSelect;
 export type BreakInsert = typeof breaks.$inferInsert;
 export type EmployeeMetricInsert = typeof employeeMetrics.$inferInsert;
@@ -221,6 +241,27 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('NPS Diario table verified/created');
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS customer_experience (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ExperienciaColaborador TEXT NOT NULL,
+        NpsDescripcionEncuestaWit TEXT NOT NULL,
+        NumeroCasoCRM TEXT NOT NULL,
+        ResolucionDeclaradaEncuestaWit TEXT NOT NULL,
+        SatisfaccionCsatEncuestaWit TEXT NOT NULL,
+        SubtipoCasoCRM TEXT NOT NULL,
+        SubtipoFinalCasoCRM TEXT NOT NULL,
+        TipoCaso TEXT NOT NULL,
+        TipoRegistro TEXT NOT NULL,
+        NpsEncuestaWit TEXT NOT NULL,
+        DiaSinHora TEXT NOT NULL,
+        EsfuerzoCesEncuestaWit TEXT NOT NULL,
+        DescCESAgrupado TEXT NOT NULL,
+        DescSATAgrupado TEXT NOT NULL
+      )
+    `);
+    console.log('CUSTOMER EXPERIENCE table verified/created');
 
     await client.execute(`
       CREATE TABLE IF NOT EXISTS breaks (
@@ -852,6 +893,81 @@ export async function deletePersonnel(id: number): Promise<void> {
   } catch (error: unknown) {
     console.error('Error deleting personnel:', error);
     throw new Error(`Failed to delete personnel: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función para insertar datos de experiencia del cliente
+export async function insertCustomerExperience(data: CustomerExperienceInsert): Promise<void> {
+  const db = getDB();
+  try {
+    await db.insert(customerExperience).values(data).run();
+    console.log('Customer Experience data inserted successfully');
+  } catch (error) {
+    console.error('Error inserting Customer Experience data:', error);
+    throw new Error(`Failed to insert Customer Experience data: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función para obtener todos los datos de experiencia del cliente
+export async function getCustomerExperienceData(): Promise<CustomerExperienceSelect[]> {
+  const db = getDB();
+  try {
+    return await db.select().from(customerExperience).all();
+  } catch (error) {
+    console.error('Error fetching Customer Experience data:', error);
+    throw new Error(`Failed to fetch Customer Experience data: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función para obtener datos de experiencia del cliente paginados
+export async function getPaginatedCustomerExperienceData(page: number, pageSize: number): Promise<CustomerExperienceSelect[]> {
+  const db = getDB();
+  try {
+    const offset = (page - 1) * pageSize;
+    return await db.select()
+      .from(customerExperience)
+      .limit(pageSize)
+      .offset(offset)
+      .all();
+  } catch (error) {
+    console.error('Error fetching paginated Customer Experience data:', error);
+    throw new Error(`Failed to fetch paginated Customer Experience data: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función para obtener el conteo total de registros de experiencia del cliente
+export async function getCustomerExperienceCount(): Promise<number> {
+  const db = getDB();
+  try {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(customerExperience).all();
+    return result[0].count;
+  } catch (error) {
+    console.error('Error getting Customer Experience count:', error);
+    throw new Error(`Failed to get Customer Experience count: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función para actualizar un registro de experiencia del cliente
+export async function updateCustomerExperience(id: number, data: Partial<CustomerExperienceInsert>): Promise<void> {
+  const db = getDB();
+  try {
+    await db.update(customerExperience).set(data).where(eq(customerExperience.id, id)).run();
+    console.log(`Customer Experience record with id ${id} updated successfully`);
+  } catch (error) {
+    console.error('Error updating Customer Experience record:', error);
+    throw new Error(`Failed to update Customer Experience record: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Función para eliminar un registro de experiencia del cliente
+export async function deleteCustomerExperience(id: number): Promise<void> {
+  const db = getDB();
+  try {
+    await db.delete(customerExperience).where(eq(customerExperience.id, id)).run();
+    console.log(`Customer Experience record with id ${id} deleted successfully`);
+  } catch (error) {
+    console.error('Error deleting Customer Experience record:', error);
+    throw new Error(`Failed to delete Customer Experience record: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

@@ -5,18 +5,18 @@ import { join } from 'path';
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
-  console.log('Auth header:', authHeader); // Add this log
+  console.log('Auth header:', authHeader);
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return NextResponse.json({ message: 'No se proporcionó el token de autorización' }, { status: 401 });
   }
 
   const token = authHeader.split(' ')[1];
-  console.log('Extracted token:', token); // Add this log
+  console.log('Extracted token:', token);
   
   try {
     const user = findUserByToken(token);
-    console.log('User found:', user ? 'Yes' : 'No'); // Add this log
+    console.log('User found:', user ? 'Yes' : 'No');
 
     if (!user) {
       return NextResponse.json({ message: 'Token inválido o usuario no encontrado' }, { status: 401 });
@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Usar Uint8Array en lugar de Buffer
+    const buffer = new Uint8Array(bytes);
 
     const fileName = `${user.username}-${Date.now()}${file.name.slice(file.name.lastIndexOf('.'))}`;
     const path = join(process.cwd(), 'public', 'uploads', fileName);
