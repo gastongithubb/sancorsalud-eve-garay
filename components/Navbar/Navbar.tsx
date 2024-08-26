@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from "next/legacy/image";
 import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Transition } from '@headlessui/react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/AuthContext';
@@ -16,7 +17,7 @@ const navLinks = [
       { href: '/trimestral', label: 'NPS Trimestral' },
       { href: '/balance-mensual', label: 'Balance Mensual' },
       { href: '/metricas-equipo', label: 'Métricas Equipo' },
-      { href: '/promotores', label: 'Promotores' }
+      { href: '/promotores', label: 'Encuestas NPS' }
     ]
   },
   { 
@@ -43,6 +44,11 @@ const navLinks = [
         label: 'Salud Reproductiva',
         target: '_blank'
       },
+      {
+        href: 'https://docs.google.com/spreadsheets/d/1GeHNHLQjdRnzl2uI6eMVy0J5a5dxqBxFQiDAvVrCIZA/edit?gid=1361535532#gid=1361535532',
+        label: 'Manual Farmaceutico',
+        target: '_blank'
+      },
       { 
         href: 'https://docs.google.com/spreadsheets/d/13R6tt3O36BfMeSDuSwfwzwi9dYP4FHhDEtj8rIBZ_Gw/edit?gid=2095242313#gid=2095242313', 
         label: 'Cronicos',
@@ -51,6 +57,11 @@ const navLinks = [
       { 
         href: 'https://docs.google.com/spreadsheets/d/1aj5NU2iU4NeIiLdhIcBAKUY4xMfhNrqm/edit?gid=1202509401#gid=1202509401', 
         label: 'Sustentable',
+        target: '_blank'
+      },
+      {
+        href: 'https://docs.google.com/spreadsheets/d/1UI_ihqmhAKsH9TOJ9E4b7Wjln9a5Vyav/edit?gid=1234629926#gid=1234629926',
+        label: 'Leche Medicamentosa',
         target: '_blank'
       },
     ]
@@ -70,12 +81,21 @@ const navLinks = [
         target: '_blank'
       },
       {
+        href: 'https://docs.google.com/document/d/11CievaucFwk5HtAXkluA9e9J7pnmHBub/edit',
+        label: 'Medios de Cobro',
+        target: '_blank'
+      },
+      {
+        href: 'https://repo.sancorsalud.com.ar/webinstitucional/assets/pdf/supra-salud/SUPRA-SALUD.pdf',
+        label: 'Condiciones Generales SupraSalud',
+        target: '_blank'
+      },
+      {
         href: '/speech',
         label: 'Speech de corte',
       }
     ]
-},
-    
+  },
 ];
 
 const Navbar: React.FC = () => {
@@ -83,20 +103,40 @@ const Navbar: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { isLoggedIn, user, isAdmin, logout, updateUser, getToken } = useAuth();
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setDropdownOpen(null);
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
   }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     console.log('Token in Navbar:', token);
   }, []);
+
+  useEffect(() => {
+    // This effect will run whenever the pathname changes
+    setDropdownOpen(null);
+    setIsOpen(false);
+  }, [pathname]);
 
   const toggleDropdown = (label: string) => {
     setDropdownOpen(prev => prev === label ? null : label);
@@ -116,7 +156,7 @@ const Navbar: React.FC = () => {
 
       try {
         const token = getToken();
-        console.log('Token for update:', token); // Add this log
+        console.log('Token for update:', token);
 
         if (!token) {
           throw new Error('No se encontró el token de autenticación');
@@ -130,16 +170,16 @@ const Navbar: React.FC = () => {
           body: formData
         });
 
-        console.log('Response status:', response.status); // Add this log
+        console.log('Response status:', response.status);
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('Error response:', errorData); // Add this log
+          console.error('Error response:', errorData);
           throw new Error(errorData.message || 'Error al actualizar la foto de perfil');
         }
 
         const result = await response.json();
-        console.log('Success response:', result); // Add this log
+        console.log('Success response:', result);
 
         if (user) {
           updateUser({ ...user, profilePicture: result.profilePictureUrl });
@@ -155,7 +195,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#f5f5f5] shadow-lg' : 'bg-transparent'}`}>
+    <header ref={navRef} className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#f5f5f5] shadow-lg' : 'bg-transparent'}`}>
       <nav className={`container mx-auto px-4 py-3 transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
@@ -243,13 +283,6 @@ const Navbar: React.FC = () => {
                     leaveTo="opacity-0 scale-95"
                   >
                     <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg">
-                      {/* <label className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:bg-blue-50">
-                        Cambiar Foto
-                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
-                      </label>
-                      <Link href="/Profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                        Editar Perfil
-                      </Link> */}
                       <button onClick={handleLogout} className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-blue-50">
                         Cerrar Sesión
                       </button>
@@ -319,70 +352,63 @@ const Navbar: React.FC = () => {
                               >
                                 {item.label}
                               </a>
-                              ) : (
-                                <Link 
-                                  key={itemIndex} 
-                                  href={item.href} 
-                                  className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
-                                >
-                                  {item.label}
-                                </Link>
-                              )
-                            ))}
-                          </div>
-                        </Transition>
-                      </>
-                    ) : (
-                      <Link href={link.href} className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
-                        {link.label}
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="pt-4 pb-3 border-t border-pink-200">
-                {isLoggedIn && user ? (
-                  <>
-                    {isAdmin && (
-                      <Link href="/dashboard" className="block px-3 py-2 text-base font-medium text-blue-600 rounded-md hover:text-blue-800 hover:bg-gray-50">
-                        Dashboard
-                      </Link>
-                    )}
-                    <div className="flex items-center px-3 py-2">
-                      <div className="flex-shrink-0">
-                        <Image src={user.profilePicture || '/default-profile.png'} alt="Profile" width={32} height={32} className="rounded-full" />
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-base font-medium text-gray-800">{user.name}</div>
-                      </div>
-                    </div>
-                    <div className="mt-3 space-y-1">
-                      {/* <label className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50 cursor-pointer">
-                        Cambiar Foto
-                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePictureChange} />
-                      </label>
-                      <Link href="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
-                        Editar Perfil
-                      </Link> */}
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full px-3 py-2 text-base font-medium text-left text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
-                      >
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <Link href="/login" className="block px-3 py-2 text-base font-medium rounded-md text-rose-400 hover:text-blue-600 hover:bg-gray-50">
-                    Iniciar sesión
-                  </Link>
-                )}
-              </div>
+                            ) : (
+                              <Link 
+                                key={itemIndex} 
+                                href={item.href} 
+                                className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
+                              >
+                                {item.label}
+                              </Link>
+                            )
+                          ))}
+                        </div>
+                      </Transition>
+                    </>
+                  ) : (
+                    <Link href={link.href} className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50">
+                      {link.label}
+                    </Link>
+                  )}
+                </div>
+              ))}
             </div>
-          </Transition>
-        </nav>
-      </header>
-    );
-  };
-  
-  export default Navbar;
+            <div className="pt-4 pb-3 border-t border-pink-200">
+              {isLoggedIn && user ? (
+                <>
+                  {isAdmin && (
+                    <Link href="/dashboard" className="block px-3 py-2 text-base font-medium text-blue-600 rounded-md hover:text-blue-800 hover:bg-gray-50">
+                      Dashboard
+                    </Link>
+                  )}
+                  <div className="flex items-center px-3 py-2">
+                    <div className="flex-shrink-0">
+                      <Image src={user.profilePicture || '/default-profile.png'} alt="Profile" width={32} height={32} className="rounded-full" />
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-base font-medium text-gray-800">{user.name}</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full px-3 py-2 text-base font-medium text-left text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-50"
+                    >
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <Link href="/login" className="block px-3 py-2 text-base font-medium rounded-md text-rose-400 hover:text-blue-600 hover:bg-gray-50">
+                  Iniciar sesión
+                </Link>
+              )}
+            </div>
+          </div>
+        </Transition>
+      </nav>
+    </header>
+  );
+};
+
+export default Navbar;
