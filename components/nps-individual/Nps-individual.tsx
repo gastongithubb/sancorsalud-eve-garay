@@ -4,6 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getNPSDiario } from '@/utils/database';
+import SancorSaludLoading from '@/components/loading'
+
 
 interface EmployeeData {
   employeeName: string;
@@ -39,7 +41,7 @@ const NPSDiarioView: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <SancorSaludLoading />;
   }
 
   return (

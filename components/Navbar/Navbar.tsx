@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { Transition } from '@headlessui/react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/AuthContext';
+import { Avatar, AvatarColor } from '@rewind-ui/core';
 
 const navLinks = [
   { 
@@ -25,6 +26,7 @@ const navLinks = [
     dropdown: [
       { href: '/reclamos', label: 'Reclamos de F4' },
       { href: '/sla', label: 'SLA' },
+      { href: 'https://docs.google.com/spreadsheets/d/1zDsHZoAQqTmGqv0LnxDyRuve24V0g7E6BtT40EyG8us/edit?gid=3622276#gid=3622276', label: 'Rangos de edad excluidos', target: '_blank' },
       { href: 'https://docs.google.com/spreadsheets/d/10dZhGPjLzw4XxZQ3uZdNmQtUo64clE9jNnWBkkUKezQ/edit#gid=0', label: 'Protesis en Ambulatorio', target: '_blank' },
       { href: 'https://drive.google.com/file/d/1WrBLlnFoTYoWQhGw8ez83VCpn3d5h4-o/view?usp=sharing', label: 'Carga de CUD (Proceso)', target: '_blank'},
       { href: '/NomencladorNU', label: 'Practicas por codigo NU y NB' },
@@ -86,17 +88,22 @@ const navLinks = [
         target: '_blank'
       },
       {
-        href: 'https://repo.sancorsalud.com.ar/webinstitucional/assets/pdf/supra-salud/SUPRA-SALUD.pdf',
-        label: 'Condiciones Generales SupraSalud',
-        target: '_blank'
-      },
-      {
         href: '/speech',
         label: 'Speech de corte',
       }
     ]
   },
 ];
+
+const getColorFromUsername = (username: string): AvatarColor => {
+  const colors: AvatarColor[] = ['red', 'yellow', 'green', 'blue', 'purple'];
+  const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
+
+const getInitials = (name: string): string => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -133,7 +140,6 @@ const Navbar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // This effect will run whenever the pathname changes
     setDropdownOpen(null);
     setIsOpen(false);
   }, [pathname]);
@@ -270,7 +276,13 @@ const Navbar: React.FC = () => {
                     onClick={() => toggleDropdown('profile')}
                     className="flex items-center space-x-2 text-gray-700 hover:text-blue-600"
                   >
-                    <Image src={user.profilePicture || '/default-profile.png'} alt="Profile" width={32} height={32} className="rounded-full" />
+                    <Avatar 
+                      color={getColorFromUsername(user.username)}
+                      size="md"
+                      status="online"
+                      tone="glossy"
+                      initials={getInitials(user.name)}
+                    />
                     <span>{user.name}</span>
                   </button>
                   <Transition
@@ -291,7 +303,7 @@ const Navbar: React.FC = () => {
                 </div>
               </>
             ) : (
-              <Link href="/Login" className="px-4 py-2 transition-colors duration-200 bg-gray-900 rounded-md text-rose-400 hover:bg-gray-700">
+<Link href="/Login" className="px-4 py-2 transition-colors duration-200 bg-gray-900 rounded-md text-rose-400 hover:bg-gray-700">
                 Iniciar sesión
               </Link>
             )}
@@ -383,7 +395,13 @@ const Navbar: React.FC = () => {
                   )}
                   <div className="flex items-center px-3 py-2">
                     <div className="flex-shrink-0">
-                      <Image src={user.profilePicture || '/default-profile.png'} alt="Profile" width={32} height={32} className="rounded-full" />
+                      <Avatar 
+                        color={getColorFromUsername(user.username)}
+                        size="md"
+                        status="online"
+                        tone="glossy"
+                        initials={getInitials(user.name)}
+                      />
                     </div>
                     <div className="ml-3">
                       <div className="text-base font-medium text-gray-800">{user.name}</div>

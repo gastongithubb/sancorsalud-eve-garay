@@ -5,6 +5,8 @@ import { getTrimestralMetrics } from '@/utils/database';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import SancorSaludLoading from '@/components/loading'
+
 
 interface TrimestralMetric {
   id: number;
@@ -119,7 +121,7 @@ const TrimestralMetricsPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <SancorSaludLoading />;
   }
 
   if (error) {

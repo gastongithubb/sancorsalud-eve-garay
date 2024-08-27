@@ -42,7 +42,12 @@ const ButtonComponent = () => {
       name: "Planes Sancor Looker", 
       color: "#ff8400",
       url: "https://lookerstudio.google.com/u/0/reporting/ba41a3f7-31e2-4d5b-9fec-77070e93da06/page/p_8pn1i7sx5c"
-    }
+    },
+    {
+      name: "Condiciones SupraSalud",
+      color: "#FFB6C1",
+      url: "https://repo.sancorsalud.com.ar/webinstitucional/assets/pdf/supra-salud/SUPRA-SALUD.pdf"
+    },
   ];
 
   const handleClick = (url: string) => {

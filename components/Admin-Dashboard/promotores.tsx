@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { UploadCloud, Filter, Save, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { insertCustomerExperience, CustomerExperienceInsert, getCustomerExperienceData, CustomerExperienceSelect } from '@/utils/database';
+import SancorSaludLoading from '@/components/loading'
+
 
 interface CSVRow {
   [key: string]: string;
@@ -175,8 +177,8 @@ const CSVUploader: React.FC = () => {
           </div>
 
           {isLoading ? (
-            <div className="text-center">Cargando datos...</div>
-          ) : (
+        <SancorSaludLoading />
+      ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>

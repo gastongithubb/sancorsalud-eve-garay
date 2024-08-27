@@ -4,6 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getEmployeeMetrics } from '@/utils/database';
+import SancorSaludLoading from '@/components/loading'
+
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -215,7 +217,7 @@ const SavedMetricsDashboard: React.FC = () => {
   );
 
   if (isLoading) {
-    return <div>Cargando datos...</div>;
+    return <SancorSaludLoading />;
   }
 
   return (

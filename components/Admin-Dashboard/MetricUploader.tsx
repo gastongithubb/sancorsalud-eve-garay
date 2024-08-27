@@ -4,6 +4,16 @@ import { parseCSV as parseMetricasTrimestral } from './trimestral-admin';
 import { parseCSV as parseMetricasMensuales } from '@/lib/excelParser';
 import { insertNPSDiario, clearNPSDiario, insertTrimestralMetric, insertEmployeeMetric, createOrUpdateEmployeeMetricsTable } from '@/utils/database';
 
+// Define the interface for NPSDiario metrics
+interface NPSDiarioMetric {
+  employeeName: string;
+  date: string;
+  Q: number;
+  NPS: number;
+  CSAT: number | null;
+  RD: number;
+}
+
 export const MetricUploader: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [metricType, setMetricType] = useState<string>('NPSDiario');
@@ -32,10 +42,17 @@ export const MetricUploader: React.FC = () => {
         try {
           if (metricType === 'NPSDiario') {
             const date = new Date().toISOString().split('T')[0]; // Use current date
-            const parsedData = parseNPSDiario(content, date);
+            const parsedData = parseNPSDiario(content);
             await clearNPSDiario();
             for (const metric of parsedData) {
-              await insertNPSDiario(metric);
+              await insertNPSDiario({
+                employeeName: metric.employeeName,
+                date: date,
+                Q: metric.Q,
+                NPS: metric.NPS,
+                SAT: metric.CSAT, // Map CSAT to SAT
+                RD: metric.RD
+              });
             }
           } else if (metricType === 'MetricasTrimestral') {
             const { employeeData } = parseMetricasTrimestral(content);

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Upload, BarChart2, UserRoundPen, Coffee, Users } from 'lucide-react';
+import { Upload, BarChart2, UserRoundPen, Coffee, Users, ClipboardList } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 
 interface SidebarProps {
-  setView: (view: 'upload' | 'visualize' | 'personal' | 'breaks' | 'customerExperience') => void;
+  setView: (view: 'upload' | 'visualize' | 'personal' | 'breaks' | 'customerExperience' | 'employeeScores') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
@@ -36,6 +36,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
         >
           <Users className="mr-2 h-4 w-4" />
           Encuestas Clientes
+        </Button>
+        <Button
+          variant="ghost"
+          className="justify-start"
+          onClick={() => setView('employeeScores')}
+        >
+          <ClipboardList className="mr-2 h-4 w-4" />
+          Calidad Empleados
         </Button>
         <Button
           variant="ghost"

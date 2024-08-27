@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getCustomerExperienceData, CustomerExperienceSelect } from '@/utils/database'; // Asegúrate de que la ruta sea correcta
+import SancorSaludLoading from '@/components/loading'
+
 
 const CustomerExperienceTable: React.FC = () => {
   const [data, setData] = useState<CustomerExperienceSelect[]>([]);
@@ -60,7 +62,7 @@ const CustomerExperienceTable: React.FC = () => {
           )}
 
           {isLoading ? (
-            <div className="text-center">Cargando datos...</div>
+            <div className="text-center">Cargando datos...<SancorSaludLoading /></div>
           ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>

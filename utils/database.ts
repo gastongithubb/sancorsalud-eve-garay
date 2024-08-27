@@ -140,6 +140,15 @@ export const employeeMetrics = sqliteTable('employee_metrics', {
   Priorizacion: text('Priorizacion').notNull()
 });
 
+export const employeeScores = sqliteTable('employee_scores', {
+  id: integer('id').primaryKey(),
+  email: text('email').notNull(),
+  name: text('name').notNull(),
+  month: text('month').notNull(),
+  week: text('week').notNull(),
+  call: text('call').notNull(),
+  score: real('score'),
+});
 
 
 export const news = sqliteTable('news', {
@@ -169,6 +178,8 @@ export type NPSDiarioSelect = typeof nps_diario.$inferSelect;
 export type NPSDiarioInsert = typeof nps_diario.$inferInsert;
 export type CustomerExperienceSelect = typeof customerExperience.$inferSelect;
 export type CustomerExperienceInsert = typeof customerExperience.$inferInsert;
+export type EmployeeScoreInsert = typeof employeeScores.$inferInsert;
+export type EmployeeScoreSelect = typeof employeeScores.$inferSelect
 export type BreakSelect = typeof breaks.$inferSelect;
 export type BreakInsert = typeof breaks.$inferInsert;
 export type EmployeeMetricInsert = typeof employeeMetrics.$inferInsert;
@@ -227,6 +238,19 @@ export async function ensureTablesExist() {
       )
     `);
     console.log('Personnel table verified/created');
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS employee_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        name TEXT NOT NULL,
+        month TEXT NOT NULL,
+        week TEXT NOT NULL,
+        call TEXT NOT NULL,
+        score REAL
+      )
+    `);
+    console.log('Employee scores table verified/created');
 
     // Create nps_diario table
     await client.execute(`
@@ -790,10 +814,25 @@ export async function updateTrimestralMetricById(id: number, metric: Partial<Tri
 
 
 
-export async function insertNPSDiario(metric: NPSDiarioInsert): Promise<void> {
+export async function insertNPSDiario(metric: {
+  employeeName: string;
+  date: string;
+  Q: number;
+  NPS: number;
+  SAT: number | null;
+  RD: number;
+}): Promise<void> {
   const db = getDB();
   try {
-    await db.insert(nps_diario).values(metric).run();
+    await db.insert(nps_diario).values({
+      employeeName: metric.employeeName,
+      date: metric.date,
+      Q: metric.Q,
+      NPS: metric.NPS,
+      SAT: metric.SAT ?? 0, // Use 0 as default if SAT is null or undefined
+      RD: metric.RD
+    }).run();
+    console.log('NPS diario inserted successfully');
   } catch (error) {
     console.error('Error inserting NPS diario:', error);
     throw new Error(`Failed to insert NPS diario: ${error instanceof Error ? error.message : String(error)}`);
@@ -968,6 +1007,64 @@ export async function deleteCustomerExperience(id: number): Promise<void> {
   } catch (error) {
     console.error('Error deleting Customer Experience record:', error);
     throw new Error(`Failed to delete Customer Experience record: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to insert a new score
+export async function insertEmployeeScore(score: EmployeeScoreInsert): Promise<void> {
+  const db = getDB();
+  try {
+    await db.insert(employeeScores).values(score).run();
+    console.log('Employee score inserted successfully');
+  } catch (error) {
+    console.error('Error inserting employee score:', error);
+    throw new Error(`Failed to insert employee score: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to get scores for a specific employee and month
+export async function getEmployeeScores(email: string, month: string): Promise<EmployeeScoreSelect[]> {
+  const db = getDB();
+  try {
+    return await db.select()
+      .from(employeeScores)
+      .where(and(
+        eq(employeeScores.email, email),
+        eq(employeeScores.month, month)
+      ))
+      .all();
+  } catch (error) {
+    console.error('Error fetching employee scores:', error);
+    throw new Error(`Failed to fetch employee scores: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to update an existing score
+export async function updateEmployeeScore(id: number, score: Partial<EmployeeScoreInsert>): Promise<void> {
+  const db = getDB();
+  try {
+    await db.update(employeeScores)
+      .set(score)
+      .where(eq(employeeScores.id, id))
+      .run();
+    console.log(`Employee score with id ${id} updated successfully`);
+  } catch (error) {
+    console.error('Error updating employee score:', error);
+    throw new Error(`Failed to update employee score: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Function to delete a score
+export async function deleteEmployeeScore(id: number): Promise<void> {
+  const db = getDB();
+  try {
+    await db.delete(employeeScores)
+      .where(eq(employeeScores.id, id))
+      .run();
+    console.log(`Employee score with id ${id} deleted successfully`);
+  } catch (error) {
+    console.error('Error deleting employee score:', error);
+    throw new Error(`Failed to delete employee score: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

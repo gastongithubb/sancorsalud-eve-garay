@@ -6,8 +6,9 @@ import { MetricUploader } from './MetricUploader';
 import EmployeeTable from './personal';
 import BreaksDashboard from './braksDiarios';
 import CustomerExperienceTable from './promotores';
+import EmployeeScores from './Calidad'; // Import the new EmployeeScores component
 
-type DashboardView = 'upload' | 'visualize' | 'personal' | 'breaks' | 'customerExperience';
+type DashboardView = 'upload' | 'visualize' | 'personal' | 'breaks' | 'customerExperience' | 'employeeScores';
 
 const SidebarDashboard: React.FC = () => {
   const [view, setView] = useState<DashboardView>('upload');
@@ -24,6 +25,8 @@ const SidebarDashboard: React.FC = () => {
         return <BreaksDashboard />;
       case 'customerExperience':
         return <CustomerExperienceTable />;
+      case 'employeeScores':
+        return <EmployeeScores />;
       default:
         return null;
     }

@@ -5,6 +5,7 @@ import { getNews, addNews, deleteNews, updateNewsStatus, updateNews } from '@/ut
 import type { NovedadesRow } from '@/utils/database';
 import { Loader2 } from 'lucide-react';
 
+
 const NewsManager: React.FC = () => {
   const [news, setNews] = useState<NovedadesRow[]>([]);
   const [filteredNews, setFilteredNews] = useState<NovedadesRow[]>([]);

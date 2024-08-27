@@ -15,16 +15,8 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import SancorSaludLoading from '@/components/loading'
 
-// Loading Animation Component
-export const LoadingAnimation = () => (
-  <div className="flex justify-center items-center h-64">
-    <div className="relative">
-      <div className="w-20 h-20 border-purple-200 border-2 rounded-full"></div>
-      <div className="w-20 h-20 border-purple-700 border-t-2 animate-spin rounded-full absolute left-0 top-0"></div>
-    </div>
-  </div>
-);
 
 type EmployeeCardProps = {
   employee: PersonnelSelect;
@@ -322,7 +314,7 @@ export default function EmployeeTable() {
         <AddEmployeeModal onAddEmployee={handleAddEmployee} />
       </div>
       {isLoading ? (
-        <LoadingAnimation />
+        <SancorSaludLoading />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredEmployees.map(employee => (

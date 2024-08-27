@@ -1,4 +1,3 @@
-'use client'
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,24 +9,28 @@ interface EmployeeData {
   date: string;
   Q: number;
   NPS: number;
-  SAT: number;
+  CSAT: number | null;
+  CES: number | null;
   RD: number;
 }
 
-export const parseCSV = (csv: string, date: string): EmployeeData[] => {
+export const parseCSV = (csv: string): EmployeeData[] => {
   const lines = csv.split('\n');
   const data: EmployeeData[] = [];
+  const dateMatch = lines[0].match(/Data (.+)/);
+  const date = dateMatch ? dateMatch[1] : 'Unknown Date';
 
   lines.slice(1).forEach(line => {
-    const [employeeName, Q, NPS, CSAT, _, RD] = line.split(';');
-    if (employeeName && employeeName !== "Equipo ") {
+    const [employeeName, Q, NPS, CSAT, CES, RD] = line.split(',');
+    if (employeeName && employeeName !== "Equipo") {
       data.push({
         employeeName,
         date,
-        Q: parseInt(Q),
-        NPS: parseInt(NPS),
-        SAT: parseFloat(CSAT.replace('%', '')),
-        RD: parseFloat(RD.replace('%', ''))
+        Q: parseInt(Q) || 0,
+        NPS: parseInt(NPS) || 0,
+        CSAT: CSAT ? parseFloat(CSAT.replace('%', '')) : null,
+        CES: CES ? parseFloat(CES.replace('%', '')) : null,
+        RD: parseFloat(RD.replace('%', '')) || 0
       });
     }
   });
@@ -40,6 +43,7 @@ const NPSDiarioDashboard: React.FC = () => {
   const [dbData, setDbData] = useState<EmployeeData[]>([]);
   const [date, setDate] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDataFromDb();
@@ -48,12 +52,21 @@ const NPSDiarioDashboard: React.FC = () => {
   const loadDataFromDb = async () => {
     try {
       const metrics = await getNPSDiario();
-      setDbData(metrics);
+      setDbData(metrics.map(metric => ({
+        employeeName: metric.employeeName,
+        date: metric.date,
+        Q: metric.Q,
+        NPS: metric.NPS,
+        CSAT: metric.SAT,
+        CES: null,
+        RD: metric.RD
+      })));
       if (metrics.length > 0) {
         setDate(metrics[0].date);
       }
     } catch (error) {
       console.error('Error loading data from database:', error);
+      setError('Error loading data from database. Please try again.');
     }
   };
 
@@ -64,11 +77,11 @@ const NPSDiarioDashboard: React.FC = () => {
       reader.onload = (e) => {
         const content = e.target?.result;
         if (typeof content === 'string') {
-          const lines = content.split('\n');
-          const newDate = lines[0].split(';')[0];
-          setDate(newDate);
-          const parsedData = parseCSV(content, newDate);
+          const parsedData = parseCSV(content);
           setCsvData(parsedData);
+          if (parsedData.length > 0) {
+            setDate(parsedData[0].date);
+          }
         }
       };
       reader.readAsText(file);
@@ -79,17 +92,25 @@ const NPSDiarioDashboard: React.FC = () => {
     if (csvData.length === 0) return;
 
     setIsSaving(true);
+    setError(null);
     try {
       await clearNPSDiario();
 
       for (const metric of csvData) {
-        await insertNPSDiario(metric);
+        await insertNPSDiario({
+          employeeName: metric.employeeName,
+          date: metric.date,
+          Q: metric.Q,
+          NPS: metric.NPS,
+          SAT: metric.CSAT ?? 0, // Use 0 as default if CSAT is null
+          RD: metric.RD
+        });
       }
       alert('Data updated successfully!');
       loadDataFromDb();
     } catch (error) {
       console.error('Error updating data:', error);
-      alert('Error updating data. Please try again.');
+      setError(`Error updating data: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
     }
@@ -115,6 +136,7 @@ const NPSDiarioDashboard: React.FC = () => {
           {isSaving ? 'Updating...' : 'Update Database'}
         </button>
       )}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       {date && <h2 className="text-2xl font-semibold mb-4">{date}</h2>}
       {displayData.length > 0 && (
         <>
@@ -131,7 +153,7 @@ const NPSDiarioDashboard: React.FC = () => {
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="NPS" fill="#8884d8" />
-                  <Bar dataKey="SAT" fill="#82ca9d" />
+                  <Bar dataKey="CSAT" fill="#82ca9d" />
                   <Bar dataKey="RD" fill="#ffc658" />
                 </BarChart>
               </ResponsiveContainer>
@@ -143,7 +165,8 @@ const NPSDiarioDashboard: React.FC = () => {
                 <TableHead>Employee Name</TableHead>
                 <TableHead>Q</TableHead>
                 <TableHead>NPS</TableHead>
-                <TableHead>SAT</TableHead>
+                <TableHead>CSAT</TableHead>
+                <TableHead>CES</TableHead>
                 <TableHead>RD</TableHead>
               </TableRow>
             </TableHeader>
@@ -153,7 +176,8 @@ const NPSDiarioDashboard: React.FC = () => {
                   <TableCell>{employee.employeeName}</TableCell>
                   <TableCell>{employee.Q}</TableCell>
                   <TableCell>{employee.NPS}</TableCell>
-                  <TableCell>{employee.SAT.toFixed(1)}%</TableCell>
+                  <TableCell>{employee.CSAT !== null ? `${employee.CSAT.toFixed(1)}%` : 'N/A'}</TableCell>
+                  <TableCell>{employee.CES !== null ? `${employee.CES.toFixed(1)}%` : 'N/A'}</TableCell>
                   <TableCell>{employee.RD.toFixed(1)}%</TableCell>
                 </TableRow>
               ))}

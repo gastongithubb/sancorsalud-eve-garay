@@ -5,6 +5,8 @@ import { getPersonnel, PersonnelSelect } from '@/utils/database';
 import { User, Clock, Briefcase, Search, Coffee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
+import SancorSaludLoading from '@/components/loading'
+
 
 type EmployeeCardProps = {
   employee: PersonnelSelect;
@@ -86,7 +88,7 @@ export default function EmployeeTable() {
   );
 
   if (isLoading) {
-    return <div>Loading employees...</div>;
+    return <SancorSaludLoading />;
   }
 
   return (
